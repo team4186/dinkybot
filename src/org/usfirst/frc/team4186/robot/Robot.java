@@ -16,18 +16,26 @@ import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSource;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Joystick.AxisType;
+import edu.wpi.first.wpilibj.command.Command;
+import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.DriverStation;;
+import edu.wpi.first.wpilibj.DriverStation;
+
+import com.kauailabs.navx.frc.AHRS;
+
+import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
+import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -44,12 +52,6 @@ public class Robot extends TimedRobot {
 
 	private String m_autoSelected;
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
-
-		
-	private PIDController pid;
-	double power;
-	private Ultrasonic sonarShort = new Ultrasonic(1, 2);
-	private AnalogInput  sonarLong = new AnalogInput(0);
 	
 	private Joystick joystick = new Joystick(0);
 		
@@ -63,10 +65,23 @@ public class Robot extends TimedRobot {
 	
 	DifferentialDrive drive = new DifferentialDrive(talon1, talon5);
 	
+	Ultrasonic sonar = new Ultrasonic(1, 2, Ultrasonic.Unit.kMillimeters);
+	AHRS navx = new AHRS(SPI.Port.kMXP);
+	
 	char gameData;
 	
+	private Command leftStartLeftSwitch() {
+		
+		CommandGroup commandGroup = new CommandGroup();
+		
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 1.0));
+		//commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
+		
+		return commandGroup;
+	}
 	
-	TalonSRX motor = new TalonSRX(1);
+	private Command autonomous;
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -79,10 +94,10 @@ public class Robot extends TimedRobot {
 		m_chooser.addObject("Right Auto", kRightAuto);
 		SmartDashboard.putData("Auto choices", m_chooser);
 		
-		sonarShort.setAutomaticMode(true);
- 
 		joystick.setThrottleChannel(2);
         joystick.setTwistChannel(5);
+        
+		sonar.setAutomaticMode(true);
                 
         talon2.follow(talon1);
 		talon3.follow(talon1);
@@ -120,47 +135,43 @@ public class Robot extends TimedRobot {
 		
 		gameData = DriverStation.getInstance().getGameSpecificMessage().charAt(0);
 		
-		pid = new PIDController(0.2, 0.0, 0.0, new PIDSource(){
-
-			@Override
-			public void setPIDSourceType(PIDSourceType pidSource) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public PIDSourceType getPIDSourceType() {
-				// TODO Auto-generated method stub
-				return PIDSourceType.kDisplacement;
-			}
-
-			@Override
-			public double pidGet() {
-				// TODO Auto-generated method stub
-				/*if (sonarLong.pidGet() < 0.3){
-					return sonarLong.pidGet();
-				}
-				else{
-					return sonarShort.getRangeMM() / 1000.0;
-				}*/
-				return sonarShort.getRangeMM() / 1000.0;
-			}
-			
-		}, new PIDOutput(){
-			@Override
-			public void pidWrite(double input){
-				power = input;
-			}
-		});
-		
 		drive.setSafetyEnabled(false);
 		
-        pid.setInputRange(0, 3);
-        pid.setAbsoluteTolerance(0.05);
-        pid.setOutputRange(-0.3, 0.3);
-        pid.setContinuous(false);
-        pid.setSetpoint(0.0);
-        pid.enable();
+		switch(gameData) {
+		case 'L':
+			switch(m_autoSelected) {
+			case kCenterAuto:
+				
+				break;
+			case kLeftAuto:
+				
+				autonomous = leftStartLeftSwitch();
+				
+				break;
+			case kRightAuto:
+				
+				break;
+			}
+		case 'R':
+			switch(m_autoSelected) {
+			case kCenterAuto:
+				
+				break;
+			case kLeftAuto:
+				
+				break;
+			case kRightAuto:
+				
+				break;
+			}
+		}
+		
+		if(autonomous != null) {
+			
+			autonomous.start();
+			
+		}
+ 
 	}
 
 	/**
@@ -170,64 +181,7 @@ public class Robot extends TimedRobot {
 	public void autonomousPeriodic() {
 		
 		Scheduler.getInstance().run();
-
-		switch (m_autoSelected) {
-			case kCenterAuto:
-				// Put custom auto code here
-				
-				System.out.println("Center");
-				
-				break;
-				
-			case kLeftAuto:
-				
-				System.out.println("Left");
-				
-				if(gameData == 'L'){
-					approachTarget();
-				}
-				
-				break;
-				
-			case kRightAuto:
-				
-				//System.out.println("Right");
-				
-				if(gameData == 'R'){
-					approachTarget();
-				}
-				
-				break;
-				
-			case kDefaultAuto:
-			default:
-				// Put default auto code here
-				//chassis.tankDrive(power, power);
-				
-				//drive.tankDrive(-0.4, -0.4);
-				System.out.println("Default");
-				
-				break;		
-		}
 		
-		//drive.tankDrive(-0.37, -0.37);
-		
-		//System.out.println(power);
-				
-		/*System.out.println(sonarShort.getRangeMM() / 1000.0);
-		
-		if(pid.isEnabled() && !pid.onTarget()){
-			drive.tankDrive(linearMap(power + Math.signum(power)*0.055), linearMap(power));
-			System.out.println("power " + linearMap(power));
-			
-		}
-		else {
-			System.out.println("Done");
-			drive.tankDrive(0.0, 0.0);
-			pid.disable();
-		}*/
-		
-
 	}
 
 	/**
@@ -247,41 +201,4 @@ public class Robot extends TimedRobot {
 	public void testPeriodic() {
 	}
 	
-	public double circleMap(double input){
-		
-		final double k = 1.3625;
-		final double r = 1.06367581998;
-
-		
-		return Math.signum(input)*(k - Math.sqrt(Math.pow(r, 2) - Math.pow(input, 2)));
-	}
-	
-	public double trigMap(double input){
-		
-		final double a = -1.52689087843;
-		final double b = 1.82498266242;
-		
-		return Math.signum(input)*(a*Math.cos(Math.abs(input)) + b);
-	}
-	
-	public double linearMap(double input){
-		
-		final double m = (1-0.3)/0.95;
-		final double b = 1-m;
-		
-		return Math.signum(input)*(m*Math.abs(input) + b);
-	}
-	
-	public void approachTarget(){
-		
-		if(pid.isEnabled() && !pid.onTarget()){
-			drive.tankDrive(linearMap(power + Math.signum(power)*0.055), linearMap(power));
-			System.out.println("power " + linearMap(power));
-			
-		}
-		else {
-			drive.tankDrive(0.0, 0.0);
-			pid.disable();
-		}
-	}
 }
