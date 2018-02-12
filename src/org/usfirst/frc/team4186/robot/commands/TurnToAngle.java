@@ -22,7 +22,7 @@ public class TurnToAngle extends Command {
 		this.navx = navx;
 		this.angle = angle;
 		
-		pidNavx = new PIDController(0.1, 0.0, 0.0, navx, new PIDOutput(){
+		pidNavx = new PIDController(1.0, 0.0, 0.0, navx, new PIDOutput(){
 			@Override
 			public void pidWrite(double input){
 				rotation = input;
@@ -30,8 +30,8 @@ public class TurnToAngle extends Command {
 		});
 		
 		pidNavx.setInputRange(-180, 180);
-        pidNavx.setAbsoluteTolerance(0.5);
-        pidNavx.setOutputRange(-0.3, 0.3);
+        pidNavx.setAbsoluteTolerance(10.0);
+        pidNavx.setOutputRange(-0.1, 0.1);
         pidNavx.setContinuous(true);
         pidNavx.disable();
 	}
@@ -50,6 +50,8 @@ public class TurnToAngle extends Command {
 		
 		drive.arcadeDrive(0.0, MapFunctions.linearMap(rotation));
 		
+		System.out.println("Angle " + navx.getAngle() + " rotation rate " + MapFunctions.linearMap(rotation));
+		
 	}
 	
 	
@@ -66,6 +68,7 @@ public class TurnToAngle extends Command {
 		
 		pidNavx.disable();
 		drive.stopMotor();
+		System.out.println("Done");
 		
 	}
 

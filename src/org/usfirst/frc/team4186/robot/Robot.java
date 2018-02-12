@@ -74,8 +74,8 @@ public class Robot extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 1.0));
-		//commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
+		//commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 1.0));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
 		
 		return commandGroup;
 	}
