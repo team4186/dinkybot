@@ -250,7 +250,7 @@ public class Robot extends TimedRobot {
 	
 	@Override
 	public void teleopPeriodic() {
-		
+			
 		drive.arcadeDrive(-joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
 		
 		System.out.println(liftEncoder.getDistance());
@@ -341,6 +341,9 @@ public class Robot extends TimedRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+		
+		drive.arcadeDrive(-joystick.getY(), -MapFunctions.listCorrection(joystick.getTwist(), navx));
+		System.out.println(navx.getVelocityY());
 	}
 	
 }
