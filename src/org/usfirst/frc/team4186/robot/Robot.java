@@ -9,6 +9,7 @@ package org.usfirst.frc.team4186.robot;
 
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Joystick;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.Joystick.AxisType;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
@@ -31,11 +33,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Encoder;
 
 import com.kauailabs.navx.frc.AHRS;
 
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
+import org.usfirst.frc.team4186.robot.TeleopActions;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -54,6 +58,17 @@ public class Robot extends TimedRobot {
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
 	
 	private Joystick joystick = new Joystick(0);
+	
+	JoystickButton dpadUp = new JoystickButton(joystick, 20);
+	JoystickButton dpadDown = new JoystickButton(joystick, 22);
+	JoystickButton topTrigger = new JoystickButton(joystick, 1);
+	JoystickButton bottomTrigger = new JoystickButton(joystick, 6);
+	
+	JoystickButton liftExchangeButton = new JoystickButton(joystick, 10);
+	JoystickButton liftSwitchButton = new JoystickButton(joystick, 12);
+	JoystickButton liftScaleButton = new JoystickButton(joystick, 14);
+
+
 		
 	WPI_TalonSRX talon1 = new WPI_TalonSRX(1);
 	WPI_TalonSRX talon5 = new WPI_TalonSRX(8);
@@ -63,9 +78,25 @@ public class Robot extends TimedRobot {
 	WPI_TalonSRX talon6 = new WPI_TalonSRX(6);
 	WPI_TalonSRX talon7 = new WPI_TalonSRX(7);
 	
-	DifferentialDrive drive = new DifferentialDrive(talon1, talon5);
+	WPI_VictorSPX victor1 = new WPI_VictorSPX(10);
+	WPI_VictorSPX victor2 = new WPI_VictorSPX(11);
 	
-	Ultrasonic sonar = new Ultrasonic(1, 2, Ultrasonic.Unit.kMillimeters);
+	WPI_TalonSRX talonlift1 = new WPI_TalonSRX(3);
+	WPI_TalonSRX talonlift2 = new WPI_TalonSRX(9);
+
+
+	Encoder liftEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k2X); //k4X?
+	boolean isLiftActive = false;
+	int liftState = 0;
+	double previousDistance;
+	
+	Encoder leftDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X);
+	
+	DifferentialDrive drive = new DifferentialDrive(talon1, talon5);
+	DifferentialDrive liftDrive = new DifferentialDrive(victor1, victor2);
+	DifferentialDrive intakeDrive = new DifferentialDrive(talonlift1, talonlift2);
+	
+	Ultrasonic sonar = new Ultrasonic(2, 3, Ultrasonic.Unit.kMillimeters);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	char gameData;
@@ -113,6 +144,18 @@ public class Robot extends TimedRobot {
 		
 		//CameraServer.getInstance().startAutomaticCapture(0);
 		//CameraServer.getInstance().startAutomaticCapture(1);
+		
+		liftEncoder.setMaxPeriod(0.01);
+		liftEncoder.setMinRate(20);
+		liftEncoder.setDistancePerPulse(1); //inches
+		liftEncoder.setReverseDirection(false);
+		liftEncoder.setSamplesToAverage(1);
+		
+		leftDriveEncoder.setMaxPeriod(0.01);
+		leftDriveEncoder.setMinRate(10);
+		leftDriveEncoder.setDistancePerPulse(1); //inches
+		leftDriveEncoder.setReverseDirection(false);
+		leftDriveEncoder.setSamplesToAverage(1);
 	}
 
 	/**
@@ -187,10 +230,85 @@ public class Robot extends TimedRobot {
 	/**
 	 * This function is called periodically during operator control.
 	 */
+	
+	@Override
+	public void teleopInit() {
+		
+		liftEncoder.reset();
+		leftDriveEncoder.reset();
+		
+		liftDrive.setSafetyEnabled(false);
+		intakeDrive.setSafetyEnabled(false);
+		drive.setSafetyEnabled(false); 
+
+		
+		previousDistance = liftEncoder.getDistance();
+		
+	}
+	
 	@Override
 	public void teleopPeriodic() {
 		
 		drive.arcadeDrive(-joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		
+		if(dpadUp.get()){
+			
+			TeleopActions.moveLift(true, liftDrive);
+			
+		}
+		else if(dpadDown.get()){
+			
+			TeleopActions.moveLift(false, liftDrive);
+			
+		}
+		
+		if(topTrigger.get()){
+			
+			TeleopActions.intake(true, intakeDrive);
+			
+		}
+		else if(bottomTrigger.get()){
+			
+			TeleopActions.intake(false, intakeDrive);
+			
+		}
+		
+		//SmartDashboard.putNumber("Encoder", liftEncoder.getDistance());
+		//System.out.println(liftEncoder.getDistance());
+		
+			
+		//intakeDrive.tankDrive(0.5,0.5);
+		//System.out.println(liftState);
+		
+		System.out.println(-leftDriveEncoder.getDistance());
+
+		if(-leftDriveEncoder.getDistance() <= 64){
+			
+			drive.arcadeDrive(-0.35, -0.35*0.35);
+			
+		}
+		
+		if(liftExchangeButton.get()){
+			
+			liftState = 0;
+			isLiftActive = true;
+						
+		}
+		else if(liftSwitchButton.get()){
+			
+			liftState = 1;
+			isLiftActive = true;
+			
+		}
+		else if(liftScaleButton.get()){
+			
+			liftState = 2;
+			isLiftActive = true;
+			
+		}
+		
+		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
+		previousDistance = liftEncoder.getDistance();
 		
 	}
 
