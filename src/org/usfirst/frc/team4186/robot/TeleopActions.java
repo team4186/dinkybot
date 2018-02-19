@@ -32,9 +32,10 @@ public class TeleopActions {
 
 	}
 
-	public static final int LIFT_LEVEL_LOW = 0;
-	public static final int LIFT_LEVEL_MEDIUM = 1;
-	public static final int LIFT_LEVEL_HIGHT = 2;
+	public static final int LIFT_LEVEL_DEFAULT = 0;
+	public static final int LIFT_LEVEL_EXCHANGE = 1;
+	public static final int LIFT_LEVEL_SWITCH = 2;
+	public static final int LIFT_LEVEL_SCALE = 3;
 	
 	public static boolean changeLiftState(boolean isActive, int liftState, DifferentialDrive liftDrive, Encoder liftEncoder, double previousDistance) {
 		
@@ -42,9 +43,9 @@ public class TeleopActions {
 
 			switch (liftState) {
 
-			case LIFT_LEVEL_LOW:
+			case LIFT_LEVEL_DEFAULT:
 
-				if (-liftEncoder.getDistance() >= 0) {
+				if (liftEncoder.getDistance() >= 0) {
 
 					liftDrive.tankDrive(-0.5, -0.5);
 					System.out.println("0");
@@ -52,17 +53,36 @@ public class TeleopActions {
 					return true;
 
 				}
+				
 				break;
 
-			case LIFT_LEVEL_MEDIUM:
+			case LIFT_LEVEL_EXCHANGE:
 
-				if (-liftEncoder.getDistance() > 275 && -previousDistance > 275) {
+				if (liftEncoder.getDistance() > 275 && previousDistance > 275) {
 
 					liftDrive.tankDrive(-0.5, -0.5);
 					System.out.println("1, 1");
 
 					return true;
-				} else if (-liftEncoder.getDistance() <= 275  && -previousDistance < 275) {
+				} else if (liftEncoder.getDistance() <= 275  && previousDistance < 275) {
+
+					liftDrive.tankDrive(0.5, 0.5);
+					System.out.println("1, 2");
+
+					return true;
+
+				}
+				break;
+			
+			case LIFT_LEVEL_SWITCH:
+
+				if (liftEncoder.getDistance() > 425 && previousDistance > 425) {
+
+					liftDrive.tankDrive(-0.5, -0.5);
+					System.out.println("1, 1");
+
+					return true;
+				} else if (liftEncoder.getDistance() <= 425  && -previousDistance < 425) {
 
 					liftDrive.tankDrive(0.5, 0.5);
 					System.out.println("1, 2");
@@ -72,9 +92,9 @@ public class TeleopActions {
 				}
 				break;
 
-			case LIFT_LEVEL_HIGHT:
+			case LIFT_LEVEL_SCALE:
 
-				if (-liftEncoder.getDistance() <= 575) {
+				if (Math.abs(liftEncoder.getDistance()) <= 575) {
 
 					liftDrive.tankDrive(0.5, 0.5);
 					System.out.println("2");
@@ -85,6 +105,9 @@ public class TeleopActions {
 
 			}
 
+		}
+		else {
+			liftDrive.stopMotor();
 		}
 
 		return false;

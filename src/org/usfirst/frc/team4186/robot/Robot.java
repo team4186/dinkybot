@@ -67,8 +67,9 @@ public class Robot extends TimedRobot {
 	JoystickButton liftExchangeButton = new JoystickButton(joystick, 10);
 	JoystickButton liftSwitchButton = new JoystickButton(joystick, 12);
 	JoystickButton liftScaleButton = new JoystickButton(joystick, 14);
-
-
+	
+	JoystickButton liftUp = new JoystickButton(joystick, 3);
+	JoystickButton liftDown = new JoystickButton(joystick, 4);
 		
 	WPI_TalonSRX talon1 = new WPI_TalonSRX(1);
 	WPI_TalonSRX talon5 = new WPI_TalonSRX(8);
@@ -240,8 +241,9 @@ public class Robot extends TimedRobot {
 		liftDrive.setSafetyEnabled(false);
 		intakeDrive.setSafetyEnabled(false);
 		drive.setSafetyEnabled(false); 
-
 		
+		liftState = 0;
+		liftDrive.stopMotor();
 		previousDistance = liftEncoder.getDistance();
 		
 	}
@@ -250,6 +252,8 @@ public class Robot extends TimedRobot {
 	public void teleopPeriodic() {
 		
 		drive.arcadeDrive(-joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		
+		System.out.println(liftEncoder.getDistance());
 		
 		if(dpadUp.get()){
 			
@@ -280,32 +284,52 @@ public class Robot extends TimedRobot {
 		//intakeDrive.tankDrive(0.5,0.5);
 		//System.out.println(liftState);
 		
-		System.out.println(-leftDriveEncoder.getDistance());
+		/*System.out.println(-leftDriveEncoder.getDistance());
 
 		if(-leftDriveEncoder.getDistance() <= 64){
 			
 			drive.arcadeDrive(-0.35, -0.35*0.35);
 			
-		}
+		}*/
 		
 		if(liftExchangeButton.get()){
 			
-			liftState = 0;
+			liftState = TeleopActions.LIFT_LEVEL_DEFAULT;
 			isLiftActive = true;
 						
 		}
 		else if(liftSwitchButton.get()){
 			
-			liftState = 1;
+			liftState = TeleopActions.LIFT_LEVEL_EXCHANGE;
 			isLiftActive = true;
 			
 		}
 		else if(liftScaleButton.get()){
 			
-			liftState = 2;
+			liftState = TeleopActions.LIFT_LEVEL_SWITCH;
 			isLiftActive = true;
 			
 		}
+		else if(dpadUp.get()){
+			
+			liftState = TeleopActions.LIFT_LEVEL_SCALE;
+			isLiftActive = true;
+			
+		}
+		
+		if(liftUp.get() && !isLiftActive && liftState <= 2){
+			
+			liftState += 1;
+			isLiftActive = true;
+			
+		}
+		else if(liftDown.get() && !isLiftActive && liftState >= 1){
+			
+			liftState -= 1;
+			isLiftActive = true;
+			
+		}
+		
 		
 		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
 		previousDistance = liftEncoder.getDistance();
