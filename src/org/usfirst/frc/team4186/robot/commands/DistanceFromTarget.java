@@ -54,7 +54,7 @@ public class DistanceFromTarget extends Command {
 				
 		pidUltra.setInputRange(0, 5);
         pidUltra.setAbsoluteTolerance(0.05);
-        pidUltra.setOutputRange(-0.3, 0.3);
+        pidUltra.setOutputRange(-0.2, 0.2);
         pidUltra.setContinuous(false);
         pidUltra.setSetpoint(0.0);
         pidUltra.disable();
@@ -71,7 +71,7 @@ public class DistanceFromTarget extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(MapFunctions.linearMap(power + Math.signum(power)*0.055), MapFunctions.linearMap(power));
+		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 		
 		System.out.println("power " + power + " distance " + sonar.getRangeMM());
 				

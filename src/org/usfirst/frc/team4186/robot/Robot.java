@@ -87,7 +87,7 @@ public class Robot extends TimedRobot {
 	WPI_TalonSRX talonlift2 = new WPI_TalonSRX(9);
 
 
-	Encoder liftEncoder = new Encoder(0, 1, false, Encoder.EncodingType.k2X); //k4X?
+	Encoder liftEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X); //k4X?
 	boolean isLiftActive = false;
 	int liftState = 0;
 	double previousDistance;
@@ -98,7 +98,7 @@ public class Robot extends TimedRobot {
 	DifferentialDrive liftDrive = new DifferentialDrive(victor1, victor2);
 	DifferentialDrive intakeDrive = new DifferentialDrive(talonlift1, talonlift2);
 	
-	Ultrasonic sonar = new Ultrasonic(2, 3, Ultrasonic.Unit.kMillimeters);
+	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	char gameData;
@@ -107,9 +107,9 @@ public class Robot extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		//commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 1.0));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
 		//commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 1, liftEncoder));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 1, liftEncoder));
 		
 		return commandGroup;
 	}
@@ -347,8 +347,10 @@ public class Robot extends TimedRobot {
 	@Override
 	public void testPeriodic() {
 		
-		drive.arcadeDrive(-joystick.getY(), -MapFunctions.listCorrection(joystick.getTwist(), navx));
-		System.out.println(navx.getVelocityY());
+		//drive.arcadeDrive(-joystick.getY(), -MapFunctions.listCorrection(joystick.getTwist(), navx));
+		//System.out.println(navx.getVelocityY());
+		
+		System.out.println(sonar.getRangeMM()/1000);
 	}
 	
 }
