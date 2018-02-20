@@ -291,13 +291,13 @@ public class Robot extends TimedRobot {
 		
 		/*System.out.println(-leftDriveEncoder.getDistance());
 
-		if(-leftDriveEncoder.getDistance() <= 64){
+		if(-leftDriveEncoder.getDistance() <= 90){
 			
-			drive.arcadeDrive(-0.35, -0.35*0.35);
+			drive.tankDrive(0.35, 0.35); //increase left
 			
 		}*/
 		
-		if(liftExchangeButton.get()){
+		/*if(liftExchangeButton.get()){
 			
 			liftState = TeleopActions.LIFT_LEVEL_DEFAULT;
 			isLiftActive = true;
@@ -320,7 +320,7 @@ public class Robot extends TimedRobot {
 			liftState = TeleopActions.LIFT_LEVEL_SCALE;
 			isLiftActive = true;
 			
-		}
+		}*/
 		
 		if(liftUp.get() && !isLiftActive && liftState <= 2){
 			
@@ -338,6 +338,8 @@ public class Robot extends TimedRobot {
 		
 		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
 		previousDistance = liftEncoder.getDistance();
+		
+		
 		
 	}
 
