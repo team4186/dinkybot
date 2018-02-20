@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import com.kauailabs.navx.frc.AHRS;
 
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
+import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
 import org.usfirst.frc.team4186.robot.TeleopActions;
 
@@ -107,7 +108,8 @@ public class Robot extends TimedRobot {
 		CommandGroup commandGroup = new CommandGroup();
 		
 		//commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 1.0));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
+		//commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
+		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 1, liftEncoder));
 		
 		return commandGroup;
 	}
@@ -180,6 +182,9 @@ public class Robot extends TimedRobot {
 		gameData = DriverStation.getInstance().getGameSpecificMessage().charAt(0);
 		
 		drive.setSafetyEnabled(false);
+		liftDrive.setSafetyEnabled(false);
+		
+		liftEncoder.reset();
 		
 		switch(gameData) {
 		case 'L':

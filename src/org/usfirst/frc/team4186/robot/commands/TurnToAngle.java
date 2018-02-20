@@ -50,10 +50,8 @@ public class TurnToAngle extends Command {
 		
 		//drive.arcadeDrive(0.0, MapFunctions.linearMap(rotation));
 		drive.tankDrive(-MapFunctions.linearMap(rotation), MapFunctions.linearMap(rotation));
-		//drive.tankDrive(rotation, -rotation);
 		
-		System.out.println("Angle " + navx.getAngle() + " rotation rate " + MapFunctions.linearMap(rotation));
-		//System.out.println(pidNavx.getError());
+		//System.out.println("Angle " + navx.getAngle() + " rotation rate " + MapFunctions.linearMap(rotation));
 		
 	}
 	
