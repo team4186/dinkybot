@@ -8,12 +8,15 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 public class TeleopActions {
 
 	public static void moveLift(boolean isUp, DifferentialDrive liftDrive) {
-
+		
 		if (isUp) {
-
-			liftDrive.tankDrive(1, 1);
+			
+			liftDrive.tankDrive(0.8, 0.8);
+			
 		} else {
-			liftDrive.tankDrive(-1, -1);
+			
+			liftDrive.tankDrive(-0.8, -0.8);
+			
 		}
 
 	}

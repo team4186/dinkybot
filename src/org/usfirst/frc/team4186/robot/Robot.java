@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 
@@ -33,6 +34,7 @@ import com.kauailabs.navx.frc.AHRS;
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
 import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
+import org.usfirst.frc.team4186.robot.commands.DriveForTime;
 import org.usfirst.frc.team4186.robot.TeleopActions;
 
 
@@ -41,6 +43,8 @@ public class Robot extends TimedRobot {
 	private static final String kCenterAuto = "Center";
 	private static final String kLeftAuto = "Left";
 	private static final String kRightAuto = "Right";
+	
+	DigitalInput limitSwitch = new DigitalInput(8);
 
 	private String m_autoSelected;
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
@@ -102,7 +106,8 @@ public class Robot extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		//commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new DriveForTime(drive, 2000, -0.1));
 		
 		return commandGroup;
 	}
@@ -264,7 +269,7 @@ public class Robot extends TimedRobot {
 			
 		}
 		
-		if(topTrigger.get()){
+		/*if(topTrigger.get()){
 			
 			TeleopActions.intake(true, intakeDrive);
 			
@@ -295,19 +300,30 @@ public class Robot extends TimedRobot {
 		
 		
 		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
-		previousDistance = liftEncoder.getDistance();
+		previousDistance = liftEncoder.getDistance();*/
 		
-		if(!isLiftActive) {
+		/*if(!isLiftActive) {
 			
 			liftDrive.stopMotor();
 			
-		}
+		}*/
 		
 	}
 
 
 	@Override
 	public void testPeriodic() {
+		
+		/*if(limitSwitch.get()) {
+			
+			System.out.println(".____.");
+		}else {
+			
+			System.out.println("HAJsgjkashdjkhasd");
+		}*/
+		
+		intakeTalon1.set(0.5);
+		System.out.println("!");
 		
 	}
 	
