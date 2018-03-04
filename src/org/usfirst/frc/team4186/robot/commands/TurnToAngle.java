@@ -31,7 +31,7 @@ public class TurnToAngle extends Command {
 		
 		pidNavx.setInputRange(-180, 180);
         pidNavx.setAbsoluteTolerance(1.0);
-        pidNavx.setOutputRange(-0.1, 0.1);
+        pidNavx.setOutputRange(-0.08, 0.08);
         pidNavx.setContinuous(true);
         pidNavx.disable();
 	}

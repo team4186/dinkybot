@@ -1,13 +1,9 @@
 package org.usfirst.frc.team4186.robot.commands;
 
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDOutput;
-import edu.wpi.first.wpilibj.PIDSourceType;
-import edu.wpi.first.wpilibj.Ultrasonic;
+import org.usfirst.frc.team4186.robot.MapFunctions;
+
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import org.usfirst.frc.team4186.robot.MapFunctions;
-import edu.wpi.first.wpilibj.PIDSource;
 
 
 public class DriveForTime extends Command {
@@ -36,7 +32,8 @@ public class DriveForTime extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
+		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.025), -MapFunctions.linearMap(power));
+//		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 				
 	}
 	

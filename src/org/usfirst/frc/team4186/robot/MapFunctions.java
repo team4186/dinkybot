@@ -15,6 +15,24 @@ public class MapFunctions {
 	public static double listCorrection(double input, AHRS navx) {
 		
 		return input + 0.3*navx.getVelocityY()/1.3696442;
+	} 
+	
+	public static double distanceToTime(double distance, String robot) {
+		
+		switch(robot) {
+		
+		case "Clinky":
+			
+			return 13.11413441*distance - 355.6572878;
+			
+		/*case "Dinky":
+			
+			return ???*/
+			
+		}
+			
+			return 13.11413441*distance - 355.6572878;
+		
 	}
 
 }

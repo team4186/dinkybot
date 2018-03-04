@@ -7,13 +7,13 @@ import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import org.usfirst.frc.team4186.robot.MapFunctions;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.PIDSource;
 
 
 public class DistanceFromTarget extends Command {
 	
 	private final DifferentialDrive drive;
-	private final Ultrasonic sonar;
 	private final double distance;
 	private double power;
 	private final PIDController pidUltra;
@@ -21,7 +21,6 @@ public class DistanceFromTarget extends Command {
 	public DistanceFromTarget(DifferentialDrive drive, Ultrasonic sonar, double distance) {
 		
 		this.drive = drive;
-		this.sonar = sonar;
 		this.distance = distance;
 		
 		pidUltra = new PIDController(0.1, 0.0, 0.0, new PIDSource() {
@@ -41,7 +40,7 @@ public class DistanceFromTarget extends Command {
 			@Override
 			public double pidGet() {
 				
-				return sonar.getRangeMM() / 1000.0;
+				return Math.min(5.0, sonar.getRangeMM() / 1000.0);
 				
 			}
 			
@@ -53,8 +52,10 @@ public class DistanceFromTarget extends Command {
 		});
 				
 		pidUltra.setInputRange(0, 5);
-        pidUltra.setAbsoluteTolerance(0.05);
-        pidUltra.setOutputRange(-0.2, 0.2);
+        pidUltra.setAbsoluteTolerance(0.1);
+        pidUltra.setOutputRange(-0.1, 0.1); //Jerks at high speeds
+//        pidUltra.setAbsoluteTolerance(0.05);
+//        pidUltra.setOutputRange(-0.2, 0.2);
         pidUltra.setContinuous(false);
         pidUltra.setSetpoint(0.0);
         pidUltra.disable();
@@ -71,10 +72,13 @@ public class DistanceFromTarget extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
+		double newPower = -MapFunctions.linearMap(power);
+		drive.tankDrive(newPower + 0.01, newPower);
+//		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 		
-		System.out.println("power " + power + " distance " + sonar.getRangeMM());
-				
+		SmartDashboard.putNumber("Power", -MapFunctions.linearMap(power));
+		SmartDashboard.putNumber("Distance", pidUltra.getError());
+		
 	}
 	
 	
@@ -89,7 +93,6 @@ public class DistanceFromTarget extends Command {
 	@Override
 	protected void end() {
 		
-		System.out.println("Done");
 		drive.stopMotor();
 		pidUltra.disable();
 		
