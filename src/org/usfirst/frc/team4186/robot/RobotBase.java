@@ -2,10 +2,12 @@ package org.usfirst.frc.team4186.robot;
 
 import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
+import org.usfirst.frc.team4186.robot.commands.DriveEncoder;
 import org.usfirst.frc.team4186.robot.commands.DriveForTime;
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
 import org.usfirst.frc.team4186.robot.factory.MotorFactory;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.AnalogInput;
@@ -15,11 +17,13 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
+import edu.wpi.first.wpilibj.command.PrintCommand;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -27,6 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 public abstract class RobotBase extends TimedRobot {
+	
 	private static final String kDefaultAuto = "Default";
 	private static final String kLeftOuterAuto = "Left Outer";
 	private static final String kRightOuterAuto = "Right Outer";
@@ -49,37 +54,44 @@ public abstract class RobotBase extends TimedRobot {
 	JoystickButton resetEncoders = new JoystickButton(joystick, 7);
 
 
-	Encoder liftEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X);
+	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
 	boolean isLiftActive = false;
 	int liftState = 0;
 	double previousDistance;
 	
 	Encoder leftDriveEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
+	Encoder rightDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X);
 	
 	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	DifferentialDrive drive; 
-	DifferentialDrive liftDrive;
+	SpeedController liftDrive;
 	DifferentialDrive intakeDrive;
 	
 	AnalogInput longSonar = new AnalogInput(0);
 	
-	char gameData;
+	String gameData;
 	
 	public RobotBase(MotorFactory motorFactory) {
+		
 		drive = motorFactory.createDrive();
 		liftDrive = motorFactory.createLiftDrive();
 		intakeDrive = motorFactory.createIntakeDrive();
+		
 	}
 	
 	private Command leftInnerStartLeftSwitch() {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new PrintCommand("0"));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
+		commandGroup.addSequential(new PrintCommand("1"));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.1));
+		commandGroup.addSequential(new PrintCommand("2"));
 		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
+		commandGroup.addSequential(new PrintCommand("Finished"));
 		
 		return commandGroup;
 	}
@@ -88,12 +100,12 @@ public abstract class RobotBase extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.825));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 2.64755));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 100, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, 87.5));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 228.45, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, -87.5));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.1));
 		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
 		
 		return commandGroup;
@@ -114,12 +126,12 @@ public abstract class RobotBase extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.525));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 2.64755));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 100, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, -87.5));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 228.45, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, 87.5));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.1));
 		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
 		
 		return commandGroup;
@@ -129,45 +141,33 @@ public abstract class RobotBase extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 4.2922));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 355.6, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, 87.5));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.1));
 		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
 		
 		return commandGroup;
 	}
 	
-	private Command leftOuterStartRightSwitch() {
+	private Command leftOuterStartLeftScale() {
 		
 		CommandGroup commandGroup = new CommandGroup();
-		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 5.8234));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 4.597));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 180.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 2.525));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
-		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
+
+		//commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, ?, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, 87.5));
+		//commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, ?, -0.1));
 		
 		return commandGroup;
 	}
 	
-	private Command rightOuterStartLeftSwitch() {
+	private Command rightOuterStartRightScale() {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 5.8234));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 4.597));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 180.0));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 2.525));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, 90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
-		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
+		//commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, ?, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, -87.5));
+		//commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, ?, -0.1));
 		
 		return commandGroup;
 	}
@@ -176,11 +176,20 @@ public abstract class RobotBase extends TimedRobot {
 		
 		CommandGroup commandGroup = new CommandGroup();
 		
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 4.2922));
-		commandGroup.addSequential(new TurnToAngle(drive, navx, -90.0));
-		commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
-		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.025));
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 355.6, -0.1));
+		commandGroup.addSequential(new TurnToAngle(drive, navx, -87.5));
+		//commandGroup.addSequential(new ChangeLiftState(true, liftDrive, 2, liftEncoder));
+		commandGroup.addSequential(new DistanceFromTarget(drive, sonar, 0.1));
 		commandGroup.addSequential(new DriveForTime(intakeDrive, 3000, 1.0));
+		
+		return commandGroup;
+	}
+	
+	private Command baseline() {
+		
+		CommandGroup commandGroup = new CommandGroup();
+		
+		commandGroup.addSequential(new DriveEncoder(drive, leftDriveEncoder, 355.6, -0.1));
 		
 		return commandGroup;
 	}
@@ -224,60 +233,100 @@ public abstract class RobotBase extends TimedRobot {
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
 		
-		gameData = DriverStation.getInstance().getGameSpecificMessage().charAt(0);
+		gameData = DriverStation.getInstance().getGameSpecificMessage();
+		SmartDashboard.putString("Game Data", DriverStation.getInstance().getGameSpecificMessage());
 		
 		drive.setSafetyEnabled(false);
-		liftDrive.setSafetyEnabled(false);
+		intakeDrive.setSafetyEnabled(false);
 		
 		liftEncoder.reset();
 		
-		switch(gameData) {
+		switch(gameData.charAt(0)) {
 		case 'L':
 			switch(m_autoSelected) {
 			case kLeftOuterAuto:
 				
 				autonomous = leftOuterStartLeftSwitch();
+				SmartDashboard.putString("Auto State", "Left outer; Left switch");
 				
 				break;
 			case kLeftInnerAuto:
 				
 				autonomous = leftInnerStartLeftSwitch();
+				SmartDashboard.putString("Auto State", "Left inner; Left switch");
 				
 				break;
 			case kRightOuterAuto:
 				
-				autonomous = rightOuterStartLeftSwitch();
+				SmartDashboard.putString("Auto State", "Right outer; Left switch");
+				
+				switch(gameData.charAt(1)) {
+				case 'R':
+					
+					autonomous = rightOuterStartRightScale();
+					
+					break;
+				case 'L':
+					
+					autonomous = baseline();
+					
+					break;
+				}
 				
 				break;
 			case kRightInnerAuto:
 				
 				autonomous = rightInnerStartLeftSwitch();
+				SmartDashboard.putString("Auto State", "Right inner; Left switch");
 				
 				break;
 			}
+			break;
 		case 'R':
 			switch(m_autoSelected) {
 			case kLeftOuterAuto:
 				
-				autonomous = leftOuterStartRightSwitch();
+				SmartDashboard.putString("Auto State", "Left outer; Right switch");
+				
+				switch(gameData.charAt(1)) {
+				case 'L':
+					
+					autonomous = leftOuterStartLeftScale();
+					
+					break;
+				case 'R':
+					
+					autonomous = baseline();
+					
+					break;
+				}
 				
 				break;
 			case kLeftInnerAuto:
 				
 				autonomous = leftInnerStartRightSwitch();
+				SmartDashboard.putString("Auto State", "Left inner; Right switch");
 				
 				break;
 			case kRightOuterAuto:
 				
 				autonomous = rightOuterStartRightSwitch();
+				SmartDashboard.putString("Auto State", "Right outer; Right switch");
 				
 				break;
 			case kRightInnerAuto:
 				
 				autonomous = rightInnerStartRightSwitch();
+				SmartDashboard.putString("Auto State", "Right inner; Right switch");
 				
 				break;
 			}
+			break;
+			
+			default:
+				
+				autonomous = baseline();
+				
 		}
 		
 		if(autonomous != null) {
@@ -313,25 +362,26 @@ public abstract class RobotBase extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 			
-		drive.arcadeDrive(-joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
 				
-		if(dpadUp.get()){
+		/*if(dpadUp.get()){
 			
 			TeleopActions.moveLift(true, liftDrive);
+			System.out.println(liftEncoder.getDistance());
 			
 		}
 		else if(dpadDown.get()){
 			
 			TeleopActions.moveLift(false, liftDrive);
+			System.out.println(liftEncoder.getDistance());
 			
 		}
+		else {
+			
+			liftDrive.set(0.0);
+		}*/
 		
-		if (resetEncoders.get()) {
-			System.out.println("REset");
-			leftDriveEncoder.reset();
-		}
-		
-		/*if(topTrigger.get()){
+		if(topTrigger.get()){
 			
 			TeleopActions.intake(true, intakeDrive);
 			
@@ -362,7 +412,7 @@ public abstract class RobotBase extends TimedRobot {
 		
 		
 		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
-		previousDistance = liftEncoder.getDistance();*/
+		previousDistance = liftEncoder.getDistance();
 		
 		/*if(!isLiftActive) {
 			
@@ -375,14 +425,6 @@ public abstract class RobotBase extends TimedRobot {
 
 	@Override
 	public void testPeriodic() {
-		
-		/*if(limitSwitch.get()) {
-			
-			System.out.println(".____.");
-		}else {
-			
-			System.out.println("HAJsgjkashdjkhasd");
-		}*/
 		
 	}
 	

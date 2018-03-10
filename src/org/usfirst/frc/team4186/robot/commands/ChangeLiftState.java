@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -15,13 +16,13 @@ import edu.wpi.first.wpilibj.PIDSource;
 
 public class ChangeLiftState extends Command {
 	
-	private final DifferentialDrive liftDrive;
+	private final SpeedController liftDrive;
 	private final int liftState;
 	private final Encoder liftEncoder;
 	private double previousDistance;
 	private boolean isLiftActive;
 	
-	public ChangeLiftState(boolean isLiftActive, DifferentialDrive liftDrive, int liftState, Encoder liftEncoder) {
+	public ChangeLiftState(boolean isLiftActive, SpeedController liftDrive, int liftState, Encoder liftEncoder) {
 		
 		this.liftDrive = liftDrive;
 		this.liftState = liftState;

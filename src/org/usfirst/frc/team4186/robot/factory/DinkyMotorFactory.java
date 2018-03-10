@@ -3,9 +3,11 @@ package org.usfirst.frc.team4186.robot.factory;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
 public class DinkyMotorFactory implements MotorFactory {
+	
 	private final WPI_TalonSRX talon1 = new WPI_TalonSRX(1); // left primary
 	private final WPI_TalonSRX talon8 = new WPI_TalonSRX(8); // right primary
 
@@ -23,6 +25,7 @@ public class DinkyMotorFactory implements MotorFactory {
 
 	@Override
 	public DifferentialDrive createDrive() {
+		
 		talon2.follow(talon1);
 		talon4.follow(talon1);
 		talon6.follow(talon8);
@@ -37,16 +40,20 @@ public class DinkyMotorFactory implements MotorFactory {
 		talon7.setInverted(false);
 
 		return new DifferentialDrive(talon1, talon8);
+		
 	}
 
 	@Override
-	public DifferentialDrive createLiftDrive() {
-		return new DifferentialDrive(victor1, victor2);
+	public SpeedController createLiftDrive() {
+		return victor1;
+		
 	}
 
 	@Override
 	public DifferentialDrive createIntakeDrive() {
+		
 		return new DifferentialDrive(intakeTalon1, intakeTalon2);
+		
 	}
 
 }

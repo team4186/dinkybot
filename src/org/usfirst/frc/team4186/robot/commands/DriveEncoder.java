@@ -11,34 +11,44 @@ public class DriveEncoder extends Command {
 	private final DifferentialDrive drive;
 	private final Encoder encoder;
 	
-	private final int amount;
+	private final double amount;
 	private final double power;
 	
-	public DriveEncoder(DifferentialDrive drive, Encoder encoder, int amount, double power) {
+	public DriveEncoder(DifferentialDrive drive, Encoder encoder, double distance, double power) {
+		
 		this.drive = drive;
 		this.encoder = encoder;
-		this.amount = amount;
 		this.power = power;
+		this.amount = 21.13105731 * distance - 531.1489974;
+		
 	}
 	
 	@Override
 	protected void initialize() {
+		
 		encoder.reset();
+		
 	}
 	
 	@Override
 	protected void execute() {
-		drive.tankDrive(MapFunctions.linearMap(power + Math.signum(power)*0.025), MapFunctions.linearMap(power));
+		
+		drive.tankDrive(MapFunctions.linearMap(power), MapFunctions.linearMap(power));
+		
 	}
 	
 	@Override
 	protected boolean isFinished() {
-		return amount < encoder.get();
+		
+		return amount < -encoder.get();
+		
 	}
 	
 	@Override
 	protected void end() {
+		
 		drive.stopMotor();
+		
 	}
 
 }

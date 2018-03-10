@@ -47,7 +47,9 @@ public class DistanceFromTarget extends Command {
 		}, new PIDOutput(){
 			@Override
 			public void pidWrite(double input){
+				
 				power = input;
+				
 			}
 		});
 				
@@ -59,6 +61,7 @@ public class DistanceFromTarget extends Command {
         pidUltra.setContinuous(false);
         pidUltra.setSetpoint(0.0);
         pidUltra.disable();
+        
 	}
 	
 	@Override
@@ -72,8 +75,8 @@ public class DistanceFromTarget extends Command {
 	@Override
 	protected void execute() {
 		
-		double newPower = -MapFunctions.linearMap(power);
-		drive.tankDrive(newPower + 0.01, newPower);
+		double newPower = MapFunctions.linearMap(power);
+		drive.tankDrive(newPower, newPower);
 //		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 		
 		SmartDashboard.putNumber("Power", -MapFunctions.linearMap(power));
