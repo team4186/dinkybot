@@ -4,6 +4,7 @@ import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
 import org.usfirst.frc.team4186.robot.commands.DriveEncoder;
 import org.usfirst.frc.team4186.robot.commands.DriveForTime;
+import org.usfirst.frc.team4186.robot.commands.MoveLift;
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
 import org.usfirst.frc.team4186.robot.factory.MotorFactory;
 
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -23,6 +25,7 @@ import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
+import edu.wpi.first.wpilibj.command.InstantCommand;
 import edu.wpi.first.wpilibj.command.PrintCommand;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -217,8 +220,9 @@ public abstract class RobotBase extends TimedRobot {
 		liftEncoder.setMaxPeriod(0.01);
 		liftEncoder.setMinRate(20);
 		liftEncoder.setDistancePerPulse(1); 
-		liftEncoder.setReverseDirection(false);
+		liftEncoder.setReverseDirection(true);
 		liftEncoder.setSamplesToAverage(1);
+		liftEncoder.setPIDSourceType(PIDSourceType.kDisplacement);
 		
 		leftDriveEncoder.setMaxPeriod(0.01);
 		leftDriveEncoder.setMinRate(20);
@@ -345,25 +349,51 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
-	
+	Command liftDownCommand;
+	Command liftMiddleCommand;
+	Command liftUpCommand;
+
 	@Override
 	public void teleopInit() {
 		
 		liftEncoder.reset();
 		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
 		
-		liftState = 0;
 		liftDrive.stopMotor();
-		previousDistance = liftEncoder.getDistance();
 		
+		liftDownCommand = new MoveLift(liftDrive, liftEncoder, 0);
+		liftMiddleCommand = new MoveLift(liftDrive, liftEncoder,150);
+		liftUpCommand = new MoveLift(liftDrive, liftEncoder, 300);
+
+		
+		dpadUp.whenActive(liftMiddleCommand);
+		dpadUp.whenReleased(new InstantCommand() {
+			@Override
+			protected void initialize() {
+				liftMiddleCommand.cancel();
+			}
+		});
+		
+		dpadDown.whenActive(liftDownCommand);
+		dpadDown.whenReleased(new InstantCommand() {
+			@Override
+			protected void initialize() {
+				liftDownCommand.cancel();
+			}
+		});
+
 	}
 	
 	
 	@Override
 	public void teleopPeriodic() {
-			
+			Scheduler.getInstance().run();
 		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
 				
+		
+		SmartDashboard.putData(liftMiddleCommand);
+		SmartDashboard.putData(liftDownCommand);
 		/*if(dpadUp.get()){
 			
 			TeleopActions.moveLift(true, liftDrive);
@@ -381,38 +411,6 @@ public abstract class RobotBase extends TimedRobot {
 			liftDrive.set(0.0);
 		}*/
 		
-		if(topTrigger.get()){
-			
-			TeleopActions.intake(true, intakeDrive);
-			
-		}
-		else if(bottomTrigger.get()){
-			
-			TeleopActions.intake(false, intakeDrive);
-			
-		}
-		else {
-			
-			intakeDrive.stopMotor();
-			
-		}
-		
-		if(liftUp.get() && !isLiftActive && liftState <= 2){
-			
-			liftState += 1;
-			isLiftActive = true;
-			
-		}
-		else if(liftDown.get() && !isLiftActive && liftState >= 1){
-			
-			liftState -= 1;
-			isLiftActive = true;
-			
-		}
-		
-		
-		isLiftActive = TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);	
-		previousDistance = liftEncoder.getDistance();
 		
 		/*if(!isLiftActive) {
 			
@@ -422,7 +420,13 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 
-
+	@Override
+	public void disabledPeriodic() {
+		if(liftDownCommand != null) liftDownCommand.cancel();
+		if(liftUpCommand != null) liftUpCommand.cancel();
+		if(liftMiddleCommand != null) liftMiddleCommand.cancel();
+	}
+	
 	@Override
 	public void testPeriodic() {
 		
