@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PIDOutput;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import org.usfirst.frc.team4186.robot.MapFunctions;
+import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 
 public class TurnToAngle extends Command {
 	
@@ -49,7 +49,7 @@ public class TurnToAngle extends Command {
 	protected void execute() {
 		
 		//drive.arcadeDrive(0.0, MapFunctions.linearMap(rotation));
-		drive.tankDrive(-MapFunctions.linearMap(rotation), MapFunctions.linearMap(rotation));
+		drive.tankDrive(-AuxiliaryFunctions.linearMap(rotation), AuxiliaryFunctions.linearMap(rotation));
 		
 		//System.out.println("Angle " + navx.getAngle() + " rotation rate " + MapFunctions.linearMap(rotation));
 		

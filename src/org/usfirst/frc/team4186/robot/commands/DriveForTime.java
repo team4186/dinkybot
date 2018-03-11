@@ -1,6 +1,6 @@
 package org.usfirst.frc.team4186.robot.commands;
 
-import org.usfirst.frc.team4186.robot.MapFunctions;
+import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -32,7 +32,7 @@ public class DriveForTime extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.025), -MapFunctions.linearMap(power));
+		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.025), -AuxiliaryFunctions.linearMap(power));
 //		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 				
 	}

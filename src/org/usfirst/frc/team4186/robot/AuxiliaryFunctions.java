@@ -2,7 +2,7 @@ package org.usfirst.frc.team4186.robot;
 
 import com.kauailabs.navx.frc.AHRS;
 
-public class MapFunctions {
+public class AuxiliaryFunctions {
 	
 	public static double linearMap(double input){
 		

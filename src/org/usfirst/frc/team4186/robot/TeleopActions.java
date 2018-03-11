@@ -51,8 +51,6 @@ public class TeleopActions {
 				if (-liftEncoder.getDistance() >= 0) {
 
 					liftDrive.set(-0.5);
-					System.out.println("0");
-
 					return true;
 
 				}
@@ -64,15 +62,11 @@ public class TeleopActions {
 				if (-liftEncoder.getDistance() > 275 && -previousDistance > 275) {
 
 					liftDrive.set(-0.5);
-					System.out.println("1, 1");
-
 					return true;
 
 				} else if (-liftEncoder.getDistance() <= 275 && -previousDistance < 275) {
 
 					liftDrive.set(0.5);
-					System.out.println("1, 2");
-
 					return true;
 
 				}
@@ -83,15 +77,11 @@ public class TeleopActions {
 				if (-liftEncoder.getDistance() > 425 && -previousDistance > 425) {
 
 					liftDrive.set(-0.5);
-					System.out.println("1, 1");
-
 					return true;
 
 				} else if (-liftEncoder.getDistance() <= 425 && -previousDistance < 425) {
 
 					liftDrive.set(0.5);
-					System.out.println("1, 2");
-
 					return true;
 
 				}
@@ -102,8 +92,6 @@ public class TeleopActions {
 				if (Math.abs(-liftEncoder.getDistance()) <= 575) {
 
 					liftDrive.set(0.5);
-					System.out.println("2");
-
 					return true;
 				}
 				break;

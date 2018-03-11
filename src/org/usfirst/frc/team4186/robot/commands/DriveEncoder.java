@@ -1,6 +1,6 @@
 package org.usfirst.frc.team4186.robot.commands;
 
-import org.usfirst.frc.team4186.robot.MapFunctions;
+import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.command.Command;
@@ -33,7 +33,7 @@ public class DriveEncoder extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(MapFunctions.linearMap(power), MapFunctions.linearMap(power));
+		drive.tankDrive(AuxiliaryFunctions.linearMap(power), AuxiliaryFunctions.linearMap(power));
 		
 	}
 	

@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import org.usfirst.frc.team4186.robot.MapFunctions;
+import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.PIDSource;
 
@@ -56,8 +56,6 @@ public class DistanceFromTarget extends Command {
 		pidUltra.setInputRange(0, 5);
         pidUltra.setAbsoluteTolerance(0.1);
         pidUltra.setOutputRange(-0.1, 0.1); //Jerks at high speeds
-//        pidUltra.setAbsoluteTolerance(0.05);
-//        pidUltra.setOutputRange(-0.2, 0.2);
         pidUltra.setContinuous(false);
         pidUltra.setSetpoint(0.0);
         pidUltra.disable();
@@ -75,11 +73,11 @@ public class DistanceFromTarget extends Command {
 	@Override
 	protected void execute() {
 		
-		double newPower = MapFunctions.linearMap(power);
+		double newPower = AuxiliaryFunctions.linearMap(power);
 		drive.tankDrive(newPower, newPower);
 //		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
 		
-		SmartDashboard.putNumber("Power", -MapFunctions.linearMap(power));
+		SmartDashboard.putNumber("Power", -AuxiliaryFunctions.linearMap(power));
 		SmartDashboard.putNumber("Distance", pidUltra.getError());
 		
 	}

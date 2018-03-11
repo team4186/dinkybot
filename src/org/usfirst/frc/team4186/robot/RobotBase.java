@@ -45,14 +45,16 @@ public abstract class RobotBase extends TimedRobot {
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
 	
 	private Joystick joystick = new Joystick(0);
-	
 		JoystickButton dpadUp = new JoystickButton(joystick, 20);
 		JoystickButton dpadDown = new JoystickButton(joystick, 22);
 		JoystickButton topTrigger = new JoystickButton(joystick, 1);
 		JoystickButton bottomTrigger = new JoystickButton(joystick, 6);
 		JoystickButton liftUp = new JoystickButton(joystick, 3);
 		JoystickButton liftDown = new JoystickButton(joystick, 4);
-		JoystickButton resetEncoders = new JoystickButton(joystick, 7);
+		JoystickButton liftStateUp = new JoystickButton(joystick, 9);
+		JoystickButton liftStateDown = new JoystickButton(joystick, 10);
+		JoystickButton gantryStateUp = new JoystickButton(joystick, 11);
+		JoystickButton gantryStateDown = new JoystickButton(joystick, 12);
 
 	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
 	
@@ -70,12 +72,18 @@ public abstract class RobotBase extends TimedRobot {
 	
 	String gameData;
 	
-	Command liftDefaultCommand;
-	Command liftExchangeCommand;
-	Command liftSwitchCommand;
-	Command liftScaleCommand;
-	
 	Command liftCommand;
+		Command liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
+		Command liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
+		Command liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
+		Command liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
+		
+	Command gantryCommand;
+		Command gantryDefaultCommand = new MoveLift(armMotor, armEncoder, 300);
+		Command gantryCarryCommand = new MoveLift(armMotor, armEncoder, 200);
+		Command gantrySwitchCommand = new MoveLift(armMotor, armEncoder, 100);
+		Command gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);
+	
 	
 	public RobotBase(MotorFactory motorFactory) {
 		
@@ -411,7 +419,67 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
+	private enum GantryState {
+		
+		GANTRY_DEFAULT,
+		GANTRY_CARRY,
+		GANTRY_SWITCH,
+		GANTRY_SCALE;
+		
+		GantryState nextState() {
+			
+			switch(this) {
+			case GANTRY_DEFAULT:
+				
+				return GANTRY_CARRY;
+			
+			case GANTRY_CARRY:
+				
+				return GANTRY_SWITCH;
+				
+			case GANTRY_SWITCH:
+				
+				return GANTRY_SCALE;
+				
+			case GANTRY_SCALE:
+				
+				return GANTRY_SCALE;
+			
+			}
+			
+			return GANTRY_DEFAULT;
+			
+		}
+		
+		GantryState previousState() {
+			
+			switch(this) {
+			case GANTRY_DEFAULT:
+				
+				return GANTRY_DEFAULT;
+			
+			case GANTRY_CARRY:
+				
+				return GANTRY_DEFAULT;
+				
+			case GANTRY_SWITCH:
+				
+				return GANTRY_CARRY;
+				
+			case GANTRY_SCALE:
+				
+				return GANTRY_SWITCH;
+			
+			}
+			
+			return GANTRY_DEFAULT;
+			
+		}
+		
+	}
+	
 	private LiftState liftState = LiftState.LIFT_DEFAULT;
+	private GantryState gantryState = GantryState.GANTRY_DEFAULT;
 	
 	private LiftState changeLiftState(LiftState liftState) {
 				
@@ -457,6 +525,45 @@ public abstract class RobotBase extends TimedRobot {
 		return liftState;
 		
 	}
+	
+	private GantryState changeGantryState(GantryState gantryState) {
+		
+		if(gantryCommand != null) {
+			
+			gantryCommand.cancel();
+			
+		}
+		
+		switch(gantryState) {
+		case GANTRY_DEFAULT:
+			
+			gantryCommand = gantryDefaultCommand;
+			break;
+			
+		case GANTRY_CARRY:
+			
+			gantryCommand = gantryCarryCommand;
+			break;
+			
+		case GANTRY_SWITCH:
+			
+			gantryCommand = gantrySwitchCommand;
+			break;
+			
+		case GANTRY_SCALE:
+			
+			gantryCommand = gantryScaleCommand;
+			break;
+			
+		default:
+			
+			gantryCommand = null;
+		
+		}
+		
+		return gantryState;
+		
+	}
 
 	@Override
 	public void teleopInit() {
@@ -469,12 +576,7 @@ public abstract class RobotBase extends TimedRobot {
 		
 		liftDrive.stopMotor();
 		
-		liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
-		liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
-		liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
-		liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
-		
-		liftUp.whenPressed(new InstantCommand() {
+		liftStateUp.whenPressed(new InstantCommand() {
 			
 			@Override
 			protected void initialize() {
@@ -485,13 +587,24 @@ public abstract class RobotBase extends TimedRobot {
 			
 		});
 		
-		liftDown.whenPressed(new InstantCommand() {
+		liftStateDown.whenPressed(new InstantCommand() {
 			
 			@Override
 			protected void initialize() {
 				
 				liftState = changeLiftState(liftState.previousState());
 					
+			}
+			
+		});
+		
+		gantryStateUp.whenPressed(new InstantCommand(){
+			
+			@Override
+			protected void initialize() {
+				
+				gantryState = changeGantryState(gantryState.nextState());
+				
 			}
 			
 		});
@@ -532,21 +645,47 @@ public abstract class RobotBase extends TimedRobot {
 			
 		}
 		
+		if(gantryCommand == null) {
+			
+			if(dpadUp.get()) {
+			
+				armMotor.set(-0.5);
+			
+			}
+			else if(dpadDown.get()) {
+			
+				armMotor.set(0.5);
+			
+			}
+			else {
+			
+				armMotor.stopMotor();
+			
+			}
+			
+		}
 		
-		if(dpadUp.get()) {
+		if(liftCommand == null) {
 			
-			armMotor.set(-0.5);
+			if(liftUp.get()) {
 			
-		}
-		else if(dpadDown.get()) {
+				liftDrive.set(-0.3);
 			
-			armMotor.set(0.5);
-			
-		}
-		else {
-			
-			armMotor.stopMotor();
-			
+			}
+			else if(liftDown.get()) {
+				
+				liftDrive.set(0.1);
+				
+			}
+			else {
+				
+				if(liftCommand == null) {
+					
+					liftDrive.stopMotor();
+					
+				}
+				
+			}
 		}
 		
 	}

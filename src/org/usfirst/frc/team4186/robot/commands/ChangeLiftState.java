@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import org.usfirst.frc.team4186.robot.MapFunctions;
+import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 import org.usfirst.frc.team4186.robot.TeleopActions;
 
 import edu.wpi.first.wpilibj.PIDSource;
