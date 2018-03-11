@@ -8,5 +8,6 @@ public interface MotorFactory {
 	DifferentialDrive createDrive();
 	SpeedController createLiftDrive();
 	DifferentialDrive createIntakeDrive();
+	SpeedController createArmMotor();
 	
 }

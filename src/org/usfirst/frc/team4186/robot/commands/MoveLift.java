@@ -20,7 +20,7 @@ public class MoveLift extends Command {
 		controller = new PIDController(0.1, 0.0, 0.0, encoder, new PIDOutput() {
 			@Override
 			public void pidWrite(double output) {
-				System.out.println("output: " + output + " position: " + encoder.pidGet() + " error: " + controller.getError());
+//				System.out.println("output: " + output + " position: " + encoder.pidGet() + " error: " + controller.getError());
 				motor.set(-output);
 			}
 		});

@@ -40,30 +40,25 @@ public abstract class RobotBase extends TimedRobot {
 	private static final String kRightOuterAuto = "Right Outer";
 	private static final String kLeftInnerAuto = "Left Inner";
 	private static final String kRightInnerAuto = "Right Inner";
-	
-	DigitalInput limitSwitch = new DigitalInput(8);
 
 	private String m_autoSelected;
 	private SendableChooser<String> m_chooser = new SendableChooser<>();
 	
 	private Joystick joystick = new Joystick(0);
 	
-	JoystickButton dpadUp = new JoystickButton(joystick, 20);
-	JoystickButton dpadDown = new JoystickButton(joystick, 22);
-	JoystickButton topTrigger = new JoystickButton(joystick, 1);
-	JoystickButton bottomTrigger = new JoystickButton(joystick, 6);
-	JoystickButton liftUp = new JoystickButton(joystick, 3);
-	JoystickButton liftDown = new JoystickButton(joystick, 4);
-	JoystickButton resetEncoders = new JoystickButton(joystick, 7);
-
+		JoystickButton dpadUp = new JoystickButton(joystick, 20);
+		JoystickButton dpadDown = new JoystickButton(joystick, 22);
+		JoystickButton topTrigger = new JoystickButton(joystick, 1);
+		JoystickButton bottomTrigger = new JoystickButton(joystick, 6);
+		JoystickButton liftUp = new JoystickButton(joystick, 3);
+		JoystickButton liftDown = new JoystickButton(joystick, 4);
+		JoystickButton resetEncoders = new JoystickButton(joystick, 7);
 
 	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
-	boolean isLiftActive = false;
-	int liftState = 0;
-	double previousDistance;
 	
 	Encoder leftDriveEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
-	Encoder rightDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X);
+	
+	Encoder armEncoder = new Encoder(8,9);
 	
 	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
@@ -71,17 +66,23 @@ public abstract class RobotBase extends TimedRobot {
 	DifferentialDrive drive; 
 	SpeedController liftDrive;
 	DifferentialDrive intakeDrive;
-	
-	AnalogInput longSonar = new AnalogInput(0);
+	SpeedController armMotor;
 	
 	String gameData;
+	
+	Command liftDefaultCommand;
+	Command liftExchangeCommand;
+	Command liftSwitchCommand;
+	Command liftScaleCommand;
+	
+	Command liftCommand;
 	
 	public RobotBase(MotorFactory motorFactory) {
 		
 		drive = motorFactory.createDrive();
 		liftDrive = motorFactory.createLiftDrive();
 		intakeDrive = motorFactory.createIntakeDrive();
-		
+		armMotor = motorFactory.createArmMotor();
 	}
 	
 	private Command leftInnerStartLeftSwitch() {
@@ -229,11 +230,13 @@ public abstract class RobotBase extends TimedRobot {
 		leftDriveEncoder.setDistancePerPulse(1); 
 		leftDriveEncoder.setReverseDirection(false);
 		leftDriveEncoder.setSamplesToAverage(1);
+		
 	}
 	
 
 	@Override
 	public void autonomousInit() {
+		
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
 		
@@ -349,38 +352,148 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
-	Command liftDownCommand;
-	Command liftMiddleCommand;
-	Command liftUpCommand;
+	private enum LiftState {
+		
+		LIFT_DEFAULT,
+		LIFT_EXCHANGE,
+		LIFT_SWITCH,
+		LIFT_SCALE;
+		
+		LiftState nextState() {
+			
+			switch(this) {
+			case LIFT_DEFAULT:
+				
+				return LIFT_EXCHANGE;
+				
+			case LIFT_EXCHANGE:
+				
+				return LIFT_SWITCH;
+				
+			case LIFT_SWITCH:
+			
+				return LIFT_SCALE;
+				
+			case LIFT_SCALE:
+				
+				return LIFT_SCALE;
+				
+			}
+			
+			return LIFT_DEFAULT;
+			
+		}
+		
+		LiftState previousState() {
+			
+			switch(this) {
+			case LIFT_DEFAULT:
+				
+				return LIFT_DEFAULT;
+				
+			case LIFT_EXCHANGE:
+				
+				return LIFT_DEFAULT;
+				
+			case LIFT_SWITCH:
+			
+				return LIFT_EXCHANGE;
+				
+			case LIFT_SCALE:
+				
+				return LIFT_SWITCH;
+				
+			}
+			
+			return LIFT_DEFAULT;
+			
+		}
+		
+	}
+	
+	private LiftState liftState = LiftState.LIFT_DEFAULT;
+	
+	private LiftState changeLiftState(LiftState liftState) {
+				
+		if(liftCommand != null) {
+			
+			liftCommand.cancel();
+			
+		}
+		
+		switch(liftState) {
+		case LIFT_DEFAULT:
+			
+			liftCommand = liftDefaultCommand;
+			break;
+			
+		case LIFT_EXCHANGE:
+			
+			liftCommand = liftExchangeCommand;
+			break;
+		
+		case LIFT_SWITCH:
+			
+			liftCommand = liftSwitchCommand;
+			break;
+			
+		case LIFT_SCALE:
+			
+			liftCommand = liftScaleCommand;
+			break;
+			
+		default:
+			
+			liftCommand = null;
+			
+		}
+		
+		if(liftCommand != null) {
+			
+			liftCommand.start();
+			
+		}
+		
+		return liftState;
+		
+	}
 
 	@Override
 	public void teleopInit() {
 		
-		liftEncoder.reset();
+		//liftEncoder.reset();
 		leftDriveEncoder.reset();
-		rightDriveEncoder.reset();
+		
+		drive.setSafetyEnabled(false);
+		intakeDrive.setSafetyEnabled(false);
 		
 		liftDrive.stopMotor();
 		
-		liftDownCommand = new MoveLift(liftDrive, liftEncoder, 0);
-		liftMiddleCommand = new MoveLift(liftDrive, liftEncoder,150);
-		liftUpCommand = new MoveLift(liftDrive, liftEncoder, 300);
-
+		liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
+		liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
+		liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
+		liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
 		
-		dpadUp.whenActive(liftMiddleCommand);
-		dpadUp.whenReleased(new InstantCommand() {
+		liftUp.whenPressed(new InstantCommand() {
+			
 			@Override
 			protected void initialize() {
-				liftMiddleCommand.cancel();
+				
+				liftState = changeLiftState(liftState.nextState());
+				
 			}
+			
 		});
 		
-		dpadDown.whenActive(liftDownCommand);
-		dpadDown.whenReleased(new InstantCommand() {
+		liftDown.whenPressed(new InstantCommand() {
+			
 			@Override
 			protected void initialize() {
-				liftDownCommand.cancel();
+				
+				liftState = changeLiftState(liftState.previousState());
+					
 			}
+			
 		});
 
 	}
@@ -388,43 +501,62 @@ public abstract class RobotBase extends TimedRobot {
 	
 	@Override
 	public void teleopPeriodic() {
-			Scheduler.getInstance().run();
-		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
-				
 		
-		SmartDashboard.putData(liftMiddleCommand);
-		SmartDashboard.putData(liftDownCommand);
-		/*if(dpadUp.get()){
+		Scheduler.getInstance().run();
 			
-			TeleopActions.moveLift(true, liftDrive);
-			System.out.println(liftEncoder.getDistance());
+		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		
+		if(joystick.getPOV() == 0) {
+			
+			intakeDrive.tankDrive(1.0, -1.0);
 			
 		}
-		else if(dpadDown.get()){
+		else if(joystick.getPOV() == 180) {
 			
-			TeleopActions.moveLift(false, liftDrive);
-			System.out.println(liftEncoder.getDistance());
+			intakeDrive.tankDrive(-1.0, 1.0);
+			
+		}
+		else if(joystick.getPOV() == 90) {
+			
+			intakeDrive.tankDrive(1.0, 1.0);
+			
+		}
+		else if(joystick.getPOV() == 270) {
+			
+			intakeDrive.tankDrive(-1.0, -1.0);
 			
 		}
 		else {
 			
-			liftDrive.set(0.0);
-		}*/
+			intakeDrive.tankDrive(0.0, 0.0);
+			
+		}
 		
 		
-		/*if(!isLiftActive) {
+		if(dpadUp.get()) {
 			
-			liftDrive.stopMotor();
+			armMotor.set(-0.5);
 			
-		}*/
+		}
+		else if(dpadDown.get()) {
+			
+			armMotor.set(0.5);
+			
+		}
+		else {
+			
+			armMotor.stopMotor();
+			
+		}
 		
 	}
 
 	@Override
 	public void disabledPeriodic() {
-		if(liftDownCommand != null) liftDownCommand.cancel();
-		if(liftUpCommand != null) liftUpCommand.cancel();
-		if(liftMiddleCommand != null) liftMiddleCommand.cancel();
+		if(liftDefaultCommand != null) liftDefaultCommand.cancel();
+		if(liftExchangeCommand != null) liftExchangeCommand.cancel();
+		if(liftSwitchCommand != null) liftSwitchCommand.cancel();
+		if(liftScaleCommand != null) liftScaleCommand.cancel(); 
 	}
 	
 	@Override

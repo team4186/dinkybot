@@ -55,5 +55,12 @@ public class DinkyMotorFactory implements MotorFactory {
 		return new DifferentialDrive(intakeTalon1, intakeTalon2);
 		
 	}
+	
+	@Override
+	public SpeedController createArmMotor() {
+		
+		return null;
+		
+	}
 
 }
