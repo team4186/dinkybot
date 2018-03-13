@@ -4,6 +4,7 @@ import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
 import org.usfirst.frc.team4186.robot.commands.DriveEncoder;
 import org.usfirst.frc.team4186.robot.commands.DriveForTime;
+import org.usfirst.frc.team4186.robot.commands.ManualMotorControl;
 import org.usfirst.frc.team4186.robot.commands.MoveLift;
 import org.usfirst.frc.team4186.robot.commands.TurnToAngle;
 import org.usfirst.frc.team4186.robot.factory.MotorFactory;
@@ -25,6 +26,7 @@ import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.CommandGroup;
+import edu.wpi.first.wpilibj.command.ConditionalCommand;
 import edu.wpi.first.wpilibj.command.InstantCommand;
 import edu.wpi.first.wpilibj.command.PrintCommand;
 import edu.wpi.first.wpilibj.command.Scheduler;
@@ -55,6 +57,7 @@ public abstract class RobotBase extends TimedRobot {
 		JoystickButton liftStateDown = new JoystickButton(joystick, 10);
 		JoystickButton gantryStateUp = new JoystickButton(joystick, 11);
 		JoystickButton gantryStateDown = new JoystickButton(joystick, 12);
+		JoystickButton resetEncoderButton = new JoystickButton(joystick, 5);
 
 	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
 	
@@ -62,7 +65,10 @@ public abstract class RobotBase extends TimedRobot {
 	
 	Encoder armEncoder = new Encoder(8,9);
 	
+	DigitalInput limitSwitchLower = new DigitalInput(10);
+	
 	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
+	//AnalogInput sonar2 = new AnalogInput(15);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	DifferentialDrive drive; 
@@ -73,17 +79,24 @@ public abstract class RobotBase extends TimedRobot {
 	String gameData;
 	
 	Command liftCommand;
-		Command liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
-		Command liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
-		Command liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
-		Command liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
+		Command liftDefaultCommand;
+		Command liftExchangeCommand;
+		Command liftSwitchCommand;
+		Command liftScaleCommand;
 		
 	Command gantryCommand;
-		Command gantryDefaultCommand = new MoveLift(armMotor, armEncoder, 300);
-		Command gantryCarryCommand = new MoveLift(armMotor, armEncoder, 200);
-		Command gantrySwitchCommand = new MoveLift(armMotor, armEncoder, 100);
-		Command gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);
+		Command gantryDefaultCommand;
+		Command gantryCarryCommand;
+		Command gantrySwitchCommand; 
+		Command gantryScaleCommand;
+		
+	Command moveGantryUp;
+	Command moveGantryDown;
+	Command moveLiftUp;
+	Command moveLiftDown;
 	
+	CommandGroup resetLift;
+		
 	
 	public RobotBase(MotorFactory motorFactory) {
 		
@@ -91,6 +104,74 @@ public abstract class RobotBase extends TimedRobot {
 		liftDrive = motorFactory.createLiftDrive();
 		intakeDrive = motorFactory.createIntakeDrive();
 		armMotor = motorFactory.createArmMotor();
+		
+		liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
+		liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
+		liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
+		liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
+		
+		gantryDefaultCommand = new MoveLift(armMotor, armEncoder, 300);
+		gantryCarryCommand = new MoveLift(armMotor, armEncoder, 200);
+		gantrySwitchCommand = new MoveLift(armMotor, armEncoder, 100);
+		gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);
+		
+		moveGantryUp = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchLower, 0.3)) {
+			
+			@Override
+			protected boolean condition() {
+				
+				return gantryCommand == null || !gantryCommand.isRunning();
+				
+			}
+			
+		};
+		
+		moveGantryDown = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchLower, -0.3)) {
+			
+			@Override
+			protected boolean condition() {
+				
+				return gantryCommand == null || !gantryCommand.isRunning();
+				
+			}
+			
+		};
+		
+		moveLiftUp = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchLower, -0.3)) {
+			
+			@Override
+			protected boolean condition() {
+				
+				return liftCommand == null || !liftCommand.isRunning();
+				
+			}
+			
+		};
+		
+		moveLiftDown = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchLower, 0.15)) {
+			
+			@Override
+			protected boolean condition() {
+				
+				return liftCommand == null || !liftCommand.isRunning();
+				
+			}
+			
+		};
+		
+		resetLift = new CommandGroup();
+		resetLift.addSequential(new ManualMotorControl(liftDrive, limitSwitchLower, 0.15));
+		resetLift.addSequential(new InstantCommand() {
+			
+			@Override
+			protected void initialize() {
+				
+				liftEncoder.reset();
+				
+			}
+			
+		});
+		
 	}
 	
 	private Command leftInnerStartLeftSwitch() {
@@ -419,6 +500,7 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
+	
 	private enum GantryState {
 		
 		GANTRY_DEFAULT,
@@ -478,10 +560,12 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
-	private LiftState liftState = LiftState.LIFT_DEFAULT;
-	private GantryState gantryState = GantryState.GANTRY_DEFAULT;
+	private LiftState liftState;
+	private GantryState gantryState;
 	
 	private LiftState changeLiftState(LiftState liftState) {
+		
+		System.out.println(liftState);
 				
 		if(liftCommand != null) {
 			
@@ -564,11 +648,14 @@ public abstract class RobotBase extends TimedRobot {
 		return gantryState;
 		
 	}
+	
 
 	@Override
 	public void teleopInit() {
 		
-		//liftEncoder.reset();
+		liftState = LiftState.LIFT_DEFAULT;
+		gantryState = GantryState.GANTRY_DEFAULT;
+		
 		leftDriveEncoder.reset();
 		
 		drive.setSafetyEnabled(false);
@@ -581,6 +668,7 @@ public abstract class RobotBase extends TimedRobot {
 			@Override
 			protected void initialize() {
 				
+				System.out.println("!");
 				liftState = changeLiftState(liftState.nextState());
 				
 			}
@@ -608,6 +696,75 @@ public abstract class RobotBase extends TimedRobot {
 			}
 			
 		});
+		
+		gantryStateDown.whenPressed(new InstantCommand(){
+			
+			@Override
+			protected void initialize() {
+				
+				gantryState = changeGantryState(gantryState.previousState());
+				
+			}
+			
+		});
+		
+		if(gantryCommand == null || !gantryCommand.isRunning()) {
+			
+			dpadUp.whenPressed(moveGantryUp);
+			dpadUp.whenReleased(new InstantCommand() {
+					
+				@Override
+				protected void initialize() {
+						
+					moveGantryUp.cancel();
+						
+				}
+					
+			});
+				
+			dpadDown.whenPressed(moveGantryDown);
+			dpadDown.whenReleased(new InstantCommand() {
+					
+				@Override
+				protected void initialize() {
+						
+					moveGantryDown.cancel();
+					
+				}
+					
+			});
+		}
+			
+		
+		if(liftCommand == null || !liftCommand.isRunning()) {
+			
+			liftUp.whenPressed(moveLiftUp);
+			liftUp.whenReleased(new InstantCommand() {
+				
+				@Override
+				protected void initialize() {
+					
+					moveLiftUp.cancel();
+					
+				}
+				
+			});
+			
+			liftDown.whenPressed(moveLiftDown);
+			liftDown.whenReleased(new InstantCommand() {
+				
+				@Override
+				protected void initialize() {
+					
+					moveLiftDown.cancel();
+					
+				}
+				
+			});
+			
+		}
+		
+		resetLift.start();
 
 	}
 	
@@ -618,6 +775,8 @@ public abstract class RobotBase extends TimedRobot {
 		Scheduler.getInstance().run();
 			
 		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		
+		//System.out.println(limitSwitchLower.get());
 		
 		if(joystick.getPOV() == 0) {
 			
@@ -645,7 +804,19 @@ public abstract class RobotBase extends TimedRobot {
 			
 		}
 		
-		if(gantryCommand == null) {
+		if(resetEncoderButton.get()) {
+			
+			liftEncoder.reset();
+			
+		}
+		
+		/*if((liftCommand == null || moveLiftUp == null || moveLiftDown == null) || (!liftCommand.isRunning() && !moveLiftUp.isRunning() && !moveLiftDown.isRunning())) {
+			
+			liftDrive.;
+			
+		}*/
+		
+		/*if(gantryCommand == null) {
 			
 			if(dpadUp.get()) {
 			
@@ -663,9 +834,9 @@ public abstract class RobotBase extends TimedRobot {
 			
 			}
 			
-		}
+		}*/
 		
-		if(liftCommand == null) {
+		/*if(liftCommand == null) {
 			
 			if(liftUp.get()) {
 			
@@ -678,15 +849,11 @@ public abstract class RobotBase extends TimedRobot {
 				
 			}
 			else {
-				
-				if(liftCommand == null) {
 					
-					liftDrive.stopMotor();
-					
-				}
+				liftDrive.stopMotor();
 				
 			}
-		}
+		}*/
 		
 	}
 
@@ -700,6 +867,8 @@ public abstract class RobotBase extends TimedRobot {
 	
 	@Override
 	public void testPeriodic() {
+		
+		//System.out.println(sonar2.pidGet());
 		
 	}
 	

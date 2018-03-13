@@ -9,10 +9,12 @@ public class ClinkyMotorFactory implements MotorFactory {
 	
 	private final WPI_VictorSPX victorLeftMain = new WPI_VictorSPX(5);
 	private final WPI_VictorSPX victorRightMain = new WPI_VictorSPX(2);
-	private final WPI_VictorSPX victorLeft1 = new WPI_VictorSPX(6);
-	private final WPI_VictorSPX victorLeft2 = new WPI_VictorSPX(7);
-	private final WPI_VictorSPX victorRight1 = new WPI_VictorSPX(3);
-	private final WPI_VictorSPX victorRight2 = new WPI_VictorSPX(4);
+	
+		private final WPI_VictorSPX victorLeft1 = new WPI_VictorSPX(6);
+		private final WPI_VictorSPX victorLeft2 = new WPI_VictorSPX(7);
+		
+		private final WPI_VictorSPX victorRight1 = new WPI_VictorSPX(3);
+		private final WPI_VictorSPX victorRight2 = new WPI_VictorSPX(4);
 
 	private final WPI_VictorSPX liftMotor = new WPI_VictorSPX(9);
 	
@@ -21,6 +23,7 @@ public class ClinkyMotorFactory implements MotorFactory {
 	
 	private final WPI_VictorSPX armMotor = new WPI_VictorSPX(1);
 
+	
 	@Override
 	public DifferentialDrive createDrive() {
 		
@@ -30,23 +33,26 @@ public class ClinkyMotorFactory implements MotorFactory {
 		victorRight2.follow(victorRightMain);
 		
 		victorLeftMain.setInverted(false);
-		victorLeft1.setInverted(false);
-		victorLeft2.setInverted(false);
+			victorLeft1.setInverted(false);
+			victorLeft2.setInverted(false);
 		victorRightMain.setInverted(false);
-		victorRight1.setInverted(false);
-		victorRight2.setInverted(false);
+			victorRight1.setInverted(false);
+			victorRight2.setInverted(false);
 		leftIntake.setInverted(false);
 		rightIntake.setInverted(true);
 		
 		return new DifferentialDrive(victorLeftMain, victorRightMain);
 		
 	}
+	
 
 	@Override
 	public SpeedController createLiftDrive() {
+		
 		return liftMotor;
 		
 	}
+	
 
 	@Override
 	public DifferentialDrive createIntakeDrive() {
@@ -54,6 +60,7 @@ public class ClinkyMotorFactory implements MotorFactory {
 		return new DifferentialDrive(leftIntake, rightIntake);
 		
 	}
+	
 	
 	@Override
 	public SpeedController createArmMotor() {

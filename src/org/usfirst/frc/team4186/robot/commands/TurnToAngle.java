@@ -36,6 +36,7 @@ public class TurnToAngle extends Command {
         pidNavx.disable();
 	}
 	
+	
 	@Override
 	protected void initialize() {
 		
@@ -45,16 +46,13 @@ public class TurnToAngle extends Command {
 		
 	}
 	
+	
 	@Override
 	protected void execute() {
 		
-		//drive.arcadeDrive(0.0, MapFunctions.linearMap(rotation));
 		drive.tankDrive(-AuxiliaryFunctions.linearMap(rotation), AuxiliaryFunctions.linearMap(rotation));
-		
-		//System.out.println("Angle " + navx.getAngle() + " rotation rate " + MapFunctions.linearMap(rotation));
-		
+				
 	}
-	
 	
 
 	@Override
@@ -63,6 +61,7 @@ public class TurnToAngle extends Command {
 		return pidNavx.onTarget();
 		
 	}
+	
 	
 	@Override
 	protected void end() {

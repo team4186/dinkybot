@@ -19,6 +19,7 @@ public class TeleopActions {
 		}
 
 	}
+	
 
 	public static void intake(boolean isIn, DifferentialDrive intakeDrive) {
 
@@ -33,11 +34,13 @@ public class TeleopActions {
 		}
 
 	}
+	
 
 	public static final int LIFT_LEVEL_DEFAULT = 0;
 	public static final int LIFT_LEVEL_EXCHANGE = 1;
 	public static final int LIFT_LEVEL_SWITCH = 2;
 	public static final int LIFT_LEVEL_SCALE = 3;
+	
 
 	public static boolean changeLiftState(boolean isActive, int liftState, SpeedController liftDrive,
 			Encoder liftEncoder, double previousDistance) {

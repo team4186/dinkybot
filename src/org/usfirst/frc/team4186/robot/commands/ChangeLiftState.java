@@ -1,17 +1,9 @@
 package org.usfirst.frc.team4186.robot.commands;
 
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDOutput;
-import edu.wpi.first.wpilibj.PIDSourceType;
 import edu.wpi.first.wpilibj.SpeedController;
-import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.command.Command;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import org.usfirst.frc.team4186.robot.AuxiliaryFunctions;
 import org.usfirst.frc.team4186.robot.TeleopActions;
-
-import edu.wpi.first.wpilibj.PIDSource;
 
 
 public class ChangeLiftState extends Command {
@@ -31,12 +23,14 @@ public class ChangeLiftState extends Command {
 		
 	}
 	
+	
 	@Override
 	protected void initialize() {
 		
 		previousDistance = liftEncoder.getDistance();
 		
 	}
+	
 	
 	@Override
 	protected void execute() {
@@ -47,7 +41,6 @@ public class ChangeLiftState extends Command {
 		
 	}
 	
-	
 
 	@Override
 	protected boolean isFinished() {
@@ -55,6 +48,7 @@ public class ChangeLiftState extends Command {
 		return !TeleopActions.changeLiftState(isLiftActive, liftState, liftDrive, liftEncoder, previousDistance);
 		
 	}
+	
 	
 	@Override
 	protected void end() {

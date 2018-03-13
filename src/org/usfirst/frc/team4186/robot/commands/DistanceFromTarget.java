@@ -25,10 +25,12 @@ public class DistanceFromTarget extends Command {
 		
 		pidUltra = new PIDController(0.1, 0.0, 0.0, new PIDSource() {
 			
+			
 			@Override
 			public void setPIDSourceType(PIDSourceType pidSource) {
 				
 			}
+			
 			
 			@Override
 			public PIDSourceType getPIDSourceType() {
@@ -36,6 +38,7 @@ public class DistanceFromTarget extends Command {
 				return PIDSourceType.kDisplacement;
 				
 			}
+			
 			
 			@Override
 			public double pidGet() {
@@ -46,10 +49,8 @@ public class DistanceFromTarget extends Command {
 			
 		}, new PIDOutput(){
 			@Override
-			public void pidWrite(double input){
-				
+			public void pidWrite(double input){	
 				power = input;
-				
 			}
 		});
 				
@@ -82,7 +83,6 @@ public class DistanceFromTarget extends Command {
 		
 	}
 	
-	
 
 	@Override
 	protected boolean isFinished() {
@@ -90,6 +90,7 @@ public class DistanceFromTarget extends Command {
 		return pidUltra.onTarget();
 		
 	}
+	
 	
 	@Override
 	protected void end() {

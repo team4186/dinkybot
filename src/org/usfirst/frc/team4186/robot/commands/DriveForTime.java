@@ -13,7 +13,6 @@ public class DriveForTime extends Command {
 	private final long time;
 	private double power;
 	
-	
 	public DriveForTime(DifferentialDrive drive, long time, double power) {
 		
 		this.drive = drive;
@@ -22,12 +21,14 @@ public class DriveForTime extends Command {
 		
 	}
 	
+	
 	@Override
 	protected void initialize() {
 		
 		startTime = System.currentTimeMillis();
 		
 	}
+	
 	
 	@Override
 	protected void execute() {
@@ -38,13 +39,13 @@ public class DriveForTime extends Command {
 	}
 	
 	
-
 	@Override
 	protected boolean isFinished() {
 		
 		return System.currentTimeMillis() - startTime >= time;
 		
 	}
+	
 	
 	@Override
 	protected void end() {

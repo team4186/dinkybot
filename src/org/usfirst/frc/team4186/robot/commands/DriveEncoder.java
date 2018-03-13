@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
+
 public class DriveEncoder extends Command {
 
 	private final DifferentialDrive drive;
@@ -23,12 +24,14 @@ public class DriveEncoder extends Command {
 		
 	}
 	
+	
 	@Override
 	protected void initialize() {
 		
 		encoder.reset();
 		
 	}
+	
 	
 	@Override
 	protected void execute() {
@@ -37,12 +40,14 @@ public class DriveEncoder extends Command {
 		
 	}
 	
+	
 	@Override
 	protected boolean isFinished() {
 		
 		return amount < -encoder.get();
 		
 	}
+	
 	
 	@Override
 	protected void end() {
