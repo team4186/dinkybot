@@ -57,7 +57,6 @@ public abstract class RobotBase extends TimedRobot {
 		JoystickButton liftStateDown = new JoystickButton(joystick, 10);
 		JoystickButton gantryStateUp = new JoystickButton(joystick, 11);
 		JoystickButton gantryStateDown = new JoystickButton(joystick, 12);
-		JoystickButton resetEncoderButton = new JoystickButton(joystick, 5);
 
 	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
 	
@@ -66,9 +65,11 @@ public abstract class RobotBase extends TimedRobot {
 	Encoder armEncoder = new Encoder(8,9);
 	
 	DigitalInput limitSwitchLower = new DigitalInput(10);
+	DigitalInput limitSwitchUpper = new DigitalInput(11);
+	DigitalInput limitSwitchGantryBottom = new DigitalInput(12);
+	DigitalInput limitSwitchGantryTop = new DigitalInput(13);
 	
 	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
-	//AnalogInput sonar2 = new AnalogInput(15);
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	DifferentialDrive drive; 
@@ -115,7 +116,7 @@ public abstract class RobotBase extends TimedRobot {
 		gantrySwitchCommand = new MoveLift(armMotor, armEncoder, 100);
 		gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);
 		
-		moveGantryUp = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchLower, 0.3)) {
+		moveGantryUp = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchGantryTop, 0.3)) {
 			
 			@Override
 			protected boolean condition() {
@@ -126,7 +127,7 @@ public abstract class RobotBase extends TimedRobot {
 			
 		};
 		
-		moveGantryDown = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchLower, -0.3)) {
+		moveGantryDown = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchGantryBottom, -0.15)) {
 			
 			@Override
 			protected boolean condition() {
@@ -137,7 +138,7 @@ public abstract class RobotBase extends TimedRobot {
 			
 		};
 		
-		moveLiftUp = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchLower, -0.3)) {
+		moveLiftUp = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchUpper, -0.3)) {
 			
 			@Override
 			protected boolean condition() {
@@ -776,7 +777,7 @@ public abstract class RobotBase extends TimedRobot {
 			
 		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
 		
-		//System.out.println(limitSwitchLower.get());
+		System.out.println(limitSwitchUpper.get());
 		
 		if(joystick.getPOV() == 0) {
 			
@@ -804,11 +805,6 @@ public abstract class RobotBase extends TimedRobot {
 			
 		}
 		
-		if(resetEncoderButton.get()) {
-			
-			liftEncoder.reset();
-			
-		}
 		
 		/*if((liftCommand == null || moveLiftUp == null || moveLiftDown == null) || (!liftCommand.isRunning() && !moveLiftUp.isRunning() && !moveLiftDown.isRunning())) {
 			
@@ -868,7 +864,7 @@ public abstract class RobotBase extends TimedRobot {
 	@Override
 	public void testPeriodic() {
 		
-		//System.out.println(sonar2.pidGet());
+		System.out.println(sonar.getRangeMM());
 		
 	}
 	
