@@ -17,8 +17,8 @@ public class DinkyMotorFactory implements MotorFactory {
 		private final WPI_TalonSRX talon6 = new WPI_TalonSRX(6); // right auxiliary
 		private final WPI_TalonSRX talon7 = new WPI_TalonSRX(7); // right auxiliary
 
-	private final WPI_VictorSPX victor1 = new WPI_VictorSPX(10); // lift left
-	private final WPI_VictorSPX victor2 = new WPI_VictorSPX(11); // lift right
+	private final WPI_VictorSPX victor1 = new WPI_VictorSPX(10); // lift motor
+	private final WPI_VictorSPX victor2 = new WPI_VictorSPX(11); //gantry motor
 
 	private final WPI_TalonSRX intakeTalon1 = new WPI_TalonSRX(3);
 	private final WPI_TalonSRX intakeTalon2 = new WPI_TalonSRX(9);
@@ -55,6 +55,9 @@ public class DinkyMotorFactory implements MotorFactory {
 	@Override
 	public DifferentialDrive createIntakeDrive() {
 		
+		intakeTalon1.setInverted(false);
+		intakeTalon2.setInverted(true);
+		
 		return new DifferentialDrive(intakeTalon1, intakeTalon2);
 		
 	}
@@ -63,7 +66,7 @@ public class DinkyMotorFactory implements MotorFactory {
 	@Override
 	public SpeedController createArmMotor() {
 		
-		return null;
+		return victor2;
 		
 	}
 

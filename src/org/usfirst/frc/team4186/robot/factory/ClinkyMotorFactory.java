@@ -38,8 +38,6 @@ public class ClinkyMotorFactory implements MotorFactory {
 		victorRightMain.setInverted(false);
 			victorRight1.setInverted(false);
 			victorRight2.setInverted(false);
-		leftIntake.setInverted(false);
-		rightIntake.setInverted(true);
 		
 		return new DifferentialDrive(victorLeftMain, victorRightMain);
 		
@@ -56,6 +54,9 @@ public class ClinkyMotorFactory implements MotorFactory {
 
 	@Override
 	public DifferentialDrive createIntakeDrive() {
+		
+		leftIntake.setInverted(false);
+		rightIntake.setInverted(true);
 		
 		return new DifferentialDrive(leftIntake, rightIntake);
 		
