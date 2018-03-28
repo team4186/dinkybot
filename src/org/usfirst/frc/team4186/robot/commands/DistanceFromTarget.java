@@ -75,8 +75,8 @@ public class DistanceFromTarget extends Command {
 	protected void execute() {
 		
 		double newPower = AuxiliaryFunctions.linearMap(power);
-		drive.tankDrive(newPower, newPower);
-//		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
+//		drive.tankDrive(newPower, newPower);
+		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.055), -AuxiliaryFunctions.linearMap(power));
 		
 		SmartDashboard.putNumber("Power", -AuxiliaryFunctions.linearMap(power));
 		SmartDashboard.putNumber("Distance", pidUltra.getError());

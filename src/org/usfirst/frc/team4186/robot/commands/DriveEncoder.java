@@ -36,7 +36,7 @@ public class DriveEncoder extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(AuxiliaryFunctions.linearMap(power), AuxiliaryFunctions.linearMap(power));
+		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.055), -AuxiliaryFunctions.linearMap(power));
 		
 	}
 	
@@ -44,7 +44,7 @@ public class DriveEncoder extends Command {
 	@Override
 	protected boolean isFinished() {
 		
-		return amount < -encoder.get();
+		return amount <= Math.abs(encoder.get());
 		
 	}
 	

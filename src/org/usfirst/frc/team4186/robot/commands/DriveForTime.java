@@ -33,8 +33,10 @@ public class DriveForTime extends Command {
 	@Override
 	protected void execute() {
 		
-		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.025), -AuxiliaryFunctions.linearMap(power));
-//		drive.tankDrive(-MapFunctions.linearMap(power + Math.signum(power)*0.055), -MapFunctions.linearMap(power));
+//		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.025), -AuxiliaryFunctions.linearMap(power));
+//		drive.tankDrive(-AuxiliaryFunctions.linearMap(power + Math.signum(power)*0.055), -AuxiliaryFunctions.linearMap(power));
+		
+		drive.tankDrive(power, -power);
 				
 	}
 	

@@ -26,10 +26,10 @@ public class MoveLift extends Command {
 		});
 		
 		controller.setContinuous(false);
-		controller.setAbsoluteTolerance(1);
+		controller.setAbsoluteTolerance(5);
 		controller.setInputRange(-300, 300);
 		controller.setName("Lift", "Lift PID");
-		controller.setOutputRange(-0.1, 0.3);
+		controller.setOutputRange(-0.5, 0.75);
 		controller.setSetpoint(target);
 	}
 	

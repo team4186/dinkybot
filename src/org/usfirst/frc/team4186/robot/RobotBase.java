@@ -55,21 +55,26 @@ public abstract class RobotBase extends TimedRobot {
 		JoystickButton liftDown = new JoystickButton(joystick, 4);
 		JoystickButton liftStateUp = new JoystickButton(joystick, 9);
 		JoystickButton liftStateDown = new JoystickButton(joystick, 10);
-		JoystickButton gantryStateUp = new JoystickButton(joystick, 11);
-		JoystickButton gantryStateDown = new JoystickButton(joystick, 12);
+		//JoystickButton gantryStateUp = new JoystickButton(joystick, 11);
+		//JoystickButton gantryStateDown = new JoystickButton(joystick, 12);
+		JoystickButton parallelUp = new JoystickButton(joystick, 13);
+		JoystickButton parallelDown = new JoystickButton(joystick, 14);
 
-	Encoder liftEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X);
+
+	Encoder liftEncoder = new Encoder(8, 9, false, Encoder.EncodingType.k2X); //6,7 on dinky
 	
-	Encoder leftDriveEncoder = new Encoder(2, 3, false, Encoder.EncodingType.k2X);
+	Encoder leftDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X); //switch left and right ports on Dinky
+	Encoder rightDriveEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X); //2, 3 on dinky
 	
-	Encoder armEncoder = new Encoder(8,9);
+	//Encoder armEncoder = new Encoder(8,9);
 	
 	DigitalInput limitSwitchLower = new DigitalInput(10);
 	DigitalInput limitSwitchUpper = new DigitalInput(11);
 	DigitalInput limitSwitchGantryBottom = new DigitalInput(12);
 	DigitalInput limitSwitchGantryTop = new DigitalInput(13);
 	
-	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters);
+	Ultrasonic sonar = new Ultrasonic(0, 1, Ultrasonic.Unit.kMillimeters); //8,9 on dinky
+	Ultrasonic sonar2 = new Ultrasonic(2, 3, Ultrasonic.Unit.kMillimeters); //delete on dinky
 	AHRS navx = new AHRS(SPI.Port.kMXP);
 	
 	DifferentialDrive drive; 
@@ -86,15 +91,18 @@ public abstract class RobotBase extends TimedRobot {
 		Command liftScaleCommand;
 		
 	Command gantryCommand;
-		Command gantryDefaultCommand;
+		/*Command gantryDefaultCommand;
 		Command gantryCarryCommand;
 		Command gantrySwitchCommand; 
-		Command gantryScaleCommand;
+		Command gantryScaleCommand;*/
 		
 	Command moveGantryUp;
 	Command moveGantryDown;
 	Command moveLiftUp;
 	Command moveLiftDown;
+	
+	CommandGroup gantryLiftUp;
+	CommandGroup gantryLiftDown;
 	
 	CommandGroup resetLift;
 		
@@ -107,38 +115,49 @@ public abstract class RobotBase extends TimedRobot {
 		armMotor = motorFactory.createArmMotor();
 		
 		liftDefaultCommand = new MoveLift(liftDrive, liftEncoder, 0);
-		liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 50);
+		liftExchangeCommand = new MoveLift(liftDrive, liftEncoder, 55);
 		liftSwitchCommand = new MoveLift(liftDrive, liftEncoder, 200);
 		liftScaleCommand = new MoveLift(liftDrive, liftEncoder, 335);
 		
-		gantryDefaultCommand = new MoveLift(armMotor, armEncoder, 300);
+		/*gantryDefaultCommand = new MoveLift(armMotor, armEncoder, 300);
 		gantryCarryCommand = new MoveLift(armMotor, armEncoder, 200);
 		gantrySwitchCommand = new MoveLift(armMotor, armEncoder, 100);
-		gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);
+		gantryScaleCommand = new MoveLift(armMotor, armEncoder, 0);*/
 		
-		moveGantryUp = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchGantryTop, 0.3)) {
+		moveGantryUp = new ConditionalCommand(new ManualMotorControl(armMotor, null, -1.0)) {
 			
 			@Override
 			protected boolean condition() {
 				
-				return gantryCommand == null || !gantryCommand.isRunning();
+				return true;
 				
 			}
 			
 		};
 		
-		moveGantryDown = new ConditionalCommand(new ManualMotorControl(armMotor, limitSwitchGantryBottom, -0.15)) {
+		moveGantryDown = new ConditionalCommand(new ManualMotorControl(armMotor, null, 0.4)) {
 			
 			@Override
 			protected boolean condition() {
 				
-				return gantryCommand == null || !gantryCommand.isRunning();
+				return true;
 				
 			}
 			
 		};
 		
-		moveLiftUp = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchUpper, -0.3)) {
+		moveLiftUp = new ConditionalCommand(new ManualMotorControl(liftDrive, null /*limitSwitchUpper*/, -1.0)) {
+			
+			@Override
+			protected boolean condition() {
+				
+				return liftCommand == null || !liftCommand.isRunning();
+				
+			}
+			
+		};
+		
+		moveLiftDown = new ConditionalCommand(new ManualMotorControl(liftDrive, null /*limitSwitchLower*/ , 0.5)) {
 			
 			@Override
 			protected boolean condition() {
@@ -149,16 +168,13 @@ public abstract class RobotBase extends TimedRobot {
 			
 		};
 		
-		moveLiftDown = new ConditionalCommand(new ManualMotorControl(liftDrive, limitSwitchLower, 0.15)) {
-			
-			@Override
-			protected boolean condition() {
-				
-				return liftCommand == null || !liftCommand.isRunning();
-				
-			}
-			
-		};
+		gantryLiftUp = new CommandGroup();
+		gantryLiftUp.addParallel(new ManualMotorControl(liftDrive, null, -1.0));
+		gantryLiftUp.addParallel(new ManualMotorControl(armMotor, limitSwitchGantryTop, -1.0));
+		
+		gantryLiftDown = new CommandGroup();
+		gantryLiftDown.addParallel(new ManualMotorControl(liftDrive, null, 1.0));
+		gantryLiftDown.addParallel(new ManualMotorControl(armMotor, limitSwitchGantryBottom, 0.4));
 		
 		resetLift = new CommandGroup();
 		resetLift.addSequential(new ManualMotorControl(liftDrive, limitSwitchLower, 0.15));
@@ -305,8 +321,8 @@ public abstract class RobotBase extends TimedRobot {
         
 		sonar.setAutomaticMode(true);
 		
-		CameraServer.getInstance().startAutomaticCapture(0);
-		CameraServer.getInstance().startAutomaticCapture(1);
+		//CameraServer.getInstance().startAutomaticCapture(0);
+		//CameraServer.getInstance().startAutomaticCapture(1); //uncomment
 		
 		liftEncoder.setMaxPeriod(0.01);
 		liftEncoder.setMinRate(20);
@@ -326,6 +342,13 @@ public abstract class RobotBase extends TimedRobot {
 
 	@Override
 	public void autonomousInit() {
+		
+		if(autonomous != null) {
+			
+			autonomous.cancel();
+			autonomous = null;
+			
+		}
 		
 		m_autoSelected = m_chooser.getSelected();
 		System.out.println("Auto selected: " + m_autoSelected);
@@ -611,7 +634,7 @@ public abstract class RobotBase extends TimedRobot {
 		
 	}
 	
-	private GantryState changeGantryState(GantryState gantryState) {
+	/*private GantryState changeGantryState(GantryState gantryState) {
 		
 		if(gantryCommand != null) {
 			
@@ -648,11 +671,18 @@ public abstract class RobotBase extends TimedRobot {
 		
 		return gantryState;
 		
-	}
+	}*/
 	
 
 	@Override
 	public void teleopInit() {
+		
+		if(autonomous != null) {
+			
+			autonomous.cancel();
+			autonomous = null;
+			
+		}
 		
 		liftState = LiftState.LIFT_DEFAULT;
 		gantryState = GantryState.GANTRY_DEFAULT;
@@ -669,7 +699,7 @@ public abstract class RobotBase extends TimedRobot {
 			@Override
 			protected void initialize() {
 				
-				System.out.println("!");
+				System.out.println(liftState);
 				liftState = changeLiftState(liftState.nextState());
 				
 			}
@@ -681,13 +711,14 @@ public abstract class RobotBase extends TimedRobot {
 			@Override
 			protected void initialize() {
 				
+				System.out.println(liftState);
 				liftState = changeLiftState(liftState.previousState());
 					
 			}
 			
 		});
 		
-		gantryStateUp.whenPressed(new InstantCommand(){
+		/*gantryStateUp.whenPressed(new InstantCommand(){
 			
 			@Override
 			protected void initialize() {
@@ -707,65 +738,87 @@ public abstract class RobotBase extends TimedRobot {
 				
 			}
 			
+		});*/
+		
+			
+		dpadUp.whenPressed(moveGantryUp);
+		dpadUp.whenReleased(new InstantCommand() {
+					
+			@Override
+			protected void initialize() {
+						
+				moveGantryUp.cancel();
+						
+			}
+					
 		});
-		
-		if(gantryCommand == null || !gantryCommand.isRunning()) {
-			
-			dpadUp.whenPressed(moveGantryUp);
-			dpadUp.whenReleased(new InstantCommand() {
+				
+		dpadDown.whenPressed(moveGantryDown);
+		dpadDown.whenReleased(new InstantCommand() {
 					
-				@Override
-				protected void initialize() {
+			@Override
+			protected void initialize() {
 						
-					moveGantryUp.cancel();
-						
-				}
+				moveGantryDown.cancel();
 					
-			});
+			}
+					
+		});
+			
+		liftUp.whenPressed(moveLiftUp);
+		liftUp.whenReleased(new InstantCommand() {
 				
-			dpadDown.whenPressed(moveGantryDown);
-			dpadDown.whenReleased(new InstantCommand() {
+			@Override
+			protected void initialize() {
 					
-				@Override
-				protected void initialize() {
-						
-					moveGantryDown.cancel();
+				moveLiftUp.cancel();
 					
-				}
+			}
+				
+		});
+			
+		liftDown.whenPressed(moveLiftDown);
+		liftDown.whenReleased(new InstantCommand() {
+				
+			@Override
+			protected void initialize() {
 					
-			});
-		}
+				moveLiftDown.cancel();
+					
+			}
+				
+		});
 			
 		
-		if(liftCommand == null || !liftCommand.isRunning()) {
+		/*if(liftCommand == null || !liftCommand.isRunning()) {
 			
-			liftUp.whenPressed(moveLiftUp);
-			liftUp.whenReleased(new InstantCommand() {
+			parallelUp.whenPressed(gantryLiftUp);
+			parallelDown.whenReleased(new InstantCommand() {
 				
 				@Override
 				protected void initialize() {
 					
-					moveLiftUp.cancel();
+					gantryLiftUp.cancel();
 					
 				}
 				
 			});
 			
-			liftDown.whenPressed(moveLiftDown);
-			liftDown.whenReleased(new InstantCommand() {
+			parallelDown.whenPressed(gantryLiftDown);
+			parallelDown.whenReleased(new InstantCommand() {
 				
 				@Override
 				protected void initialize() {
 					
-					moveLiftDown.cancel();
+					gantryLiftDown.cancel();
 					
 				}
 				
 			});
 			
-		}
+		}*/
 		
-		resetLift.start();
+		//resetLift.start(); //Uncomment 
 
 	}
 	
@@ -775,37 +828,52 @@ public abstract class RobotBase extends TimedRobot {
 		
 		Scheduler.getInstance().run();
 			
-		drive.arcadeDrive(joystick.getY(), -joystick.getTwist() - joystick.getY()*0.35);
+		//drive.arcadeDrive(-joystick.getY(), 0.75*(-joystick.getTwist() - joystick.getY()*0.35  );
+		drive.arcadeDrive(joystick.getY(), 0.75*(-joystick.getTwist()));
 		
-		System.out.println(limitSwitchUpper.get());
+		//System.out.println(limitSwitchUpper.get());
 		
-		if(joystick.getPOV() == 0) {
-			
-			intakeDrive.tankDrive(1.0, -1.0);
-			
-		}
-		else if(joystick.getPOV() == 180) {
+		/*if(joystick.getPOV() == 0) {
 			
 			intakeDrive.tankDrive(-1.0, 1.0);
 			
 		}
+		else if(joystick.getPOV() == 180) {
+			
+			intakeDrive.tankDrive(1.0, -1.0);
+			
+		}
 		else if(joystick.getPOV() == 90) {
 			
-			intakeDrive.tankDrive(1.0, 1.0);
+			intakeDrive.tankDrive(-1.0, -1.0);
 			
 		}
 		else if(joystick.getPOV() == 270) {
 			
-			intakeDrive.tankDrive(-1.0, -1.0);
+			intakeDrive.tankDrive(1.0, 1.0);
 			
 		}
 		else {
 			
 			intakeDrive.tankDrive(0.0, 0.0);
 			
+		}*/
+		
+		if(topTrigger.get()) {
+			
+			intakeDrive.tankDrive(-1.0, 1.0);
+			
 		}
-		
-		
+		else if(bottomTrigger.get()) {
+			
+			intakeDrive.tankDrive(1.0, -1.0);
+			
+		}
+		else {
+			
+			intakeDrive.stopMotor();
+			
+		}
 		/*if((liftCommand == null || moveLiftUp == null || moveLiftDown == null) || (!liftCommand.isRunning() && !moveLiftUp.isRunning() && !moveLiftDown.isRunning())) {
 			
 			liftDrive.;
@@ -852,6 +920,7 @@ public abstract class RobotBase extends TimedRobot {
 		}*/
 		
 	}
+	
 
 	@Override
 	public void disabledPeriodic() {
