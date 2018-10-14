@@ -2,6 +2,8 @@ package org.usfirst.frc.team4186.robot;
 
 import org.usfirst.frc.team4186.robot.commands.ChangeLiftState;
 import org.usfirst.frc.team4186.robot.commands.DistanceFromTarget;
+import org.usfirst.frc.team4186.robot.commands.DoubleEncoderPID;
+import org.usfirst.frc.team4186.robot.commands.DoubleEncoderPsuedoPID;
 import org.usfirst.frc.team4186.robot.commands.DriveEncoder;
 import org.usfirst.frc.team4186.robot.commands.DriveForTime;
 import org.usfirst.frc.team4186.robot.commands.ManualMotorControl;
@@ -63,8 +65,8 @@ public abstract class RobotBase extends TimedRobot {
 
 	Encoder liftEncoder = new Encoder(8, 9, false, Encoder.EncodingType.k2X); //6,7 on dinky
 	
-	Encoder leftDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k2X); //switch left and right ports on Dinky
-	Encoder rightDriveEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k2X); //2, 3 on dinky
+	Encoder leftDriveEncoder = new Encoder(4, 5, false, Encoder.EncodingType.k4X); //switch left and right ports on Dinky
+	Encoder rightDriveEncoder = new Encoder(6, 7, false, Encoder.EncodingType.k4X); //2, 3 on dinky
 	
 	//Encoder armEncoder = new Encoder(8,9);
 	
@@ -100,6 +102,8 @@ public abstract class RobotBase extends TimedRobot {
 	Command moveGantryDown;
 	Command moveLiftUp;
 	Command moveLiftDown;
+	Command moveForward;
+	Command psuedoForward;
 	
 	CommandGroup gantryLiftUp;
 	CommandGroup gantryLiftDown;
@@ -188,6 +192,9 @@ public abstract class RobotBase extends TimedRobot {
 			}
 			
 		});
+		
+		moveForward = new DoubleEncoderPID(drive, navx, leftDriveEncoder, rightDriveEncoder, 1800.0);
+		psuedoForward = new DoubleEncoderPsuedoPID(drive, leftDriveEncoder, rightDriveEncoder, 1800.0);
 		
 	}
 	
@@ -320,6 +327,7 @@ public abstract class RobotBase extends TimedRobot {
         joystick.setTwistChannel(5);
         
 		sonar.setAutomaticMode(true);
+		
 		
 		//CameraServer.getInstance().startAutomaticCapture(0);
 		//CameraServer.getInstance().startAutomaticCapture(1); //uncomment
@@ -688,6 +696,14 @@ public abstract class RobotBase extends TimedRobot {
 		gantryState = GantryState.GANTRY_DEFAULT;
 		
 		leftDriveEncoder.reset();
+		rightDriveEncoder.reset();
+		
+		leftDriveEncoder.setReverseDirection(true);
+		rightDriveEncoder.setReverseDirection(false);
+		
+		leftDriveEncoder.setDistancePerPulse(1);
+		rightDriveEncoder.setDistancePerPulse(1);
+
 		
 		drive.setSafetyEnabled(false);
 		intakeDrive.setSafetyEnabled(false);
@@ -790,6 +806,10 @@ public abstract class RobotBase extends TimedRobot {
 		});
 			
 		
+		topTrigger.whenPressed(moveForward);
+		
+		bottomTrigger.whenPressed(psuedoForward);
+		
 		/*if(liftCommand == null || !liftCommand.isRunning()) {
 			
 			parallelUp.whenPressed(gantryLiftUp);
@@ -827,9 +847,15 @@ public abstract class RobotBase extends TimedRobot {
 	public void teleopPeriodic() {
 		
 		Scheduler.getInstance().run();
+		
+		/*System.out.println(leftDriveEncoder.get());
+		System.out.println(rightDriveEncoder.get());
+		System.out.println("---");*/
+
 			
 		//drive.arcadeDrive(-joystick.getY(), 0.75*(-joystick.getTwist() - joystick.getY()*0.35  );
-		drive.arcadeDrive(joystick.getY(), 0.75*(-joystick.getTwist()));
+		//drive.arcadeDrive(joystick.getY(), 0.75*(-joystick.getTwist()));
+		
 		
 		//System.out.println(limitSwitchUpper.get());
 		
@@ -859,7 +885,7 @@ public abstract class RobotBase extends TimedRobot {
 			
 		}*/
 		
-		if(topTrigger.get()) {
+		/*if(topTrigger.get()) {
 			
 			intakeDrive.tankDrive(-1.0, 1.0);
 			
@@ -873,7 +899,7 @@ public abstract class RobotBase extends TimedRobot {
 			
 			intakeDrive.stopMotor();
 			
-		}
+		}*/
 		/*if((liftCommand == null || moveLiftUp == null || moveLiftDown == null) || (!liftCommand.isRunning() && !moveLiftUp.isRunning() && !moveLiftDown.isRunning())) {
 			
 			liftDrive.;

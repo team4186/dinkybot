@@ -18,7 +18,7 @@ public class Robot extends RobotBase {
 	
 	public Robot() {
 		
-		super(new ClinkyMotorFactory());
+		super(new ClinkyMotorFactory()); //Clinky
 		
 	}
 	
